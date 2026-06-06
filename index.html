@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<!-- saved from url=(0053)file:///Users/Alexandra.Diem/Downloads/husjakt_2.html -->
+<html lang="nb"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Husjakt — sammenlign boliger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..600&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --paper:#ece5d6; --paper-2:#f5f0e5; --card:#f7f3ea;
+    --ink:#211f18; --ink-soft:#615d50; --ink-faint:#8c8676;
+    --line:#d6cdb8; --line-soft:#e3dccb;
+    --pine:#2a4a3d; --pine-soft:#3a6353;
+    --clay:#ac4f2c; --gold:#9a7a25;
+    --best-bg:#e9efe2;
+    --tg3:#9e3320; --tg3-bg:#f5e6e1; --tg2c:#8a6a18; --tg2-bg:#f3ecd9;
+    --pro:#2a4a3d; --con:#ac4f2c;
+    --shadow:0 1px 2px rgba(33,31,24,.05), 0 8px 28px -14px rgba(33,31,24,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Hanken Grotesk',sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.5;
+    min-height:100vh;
+    position:relative;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+  .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,52px) clamp(16px,4vw,40px) 80px}
+
+  /* Header */
+  header{margin-bottom:34px}
+  .kicker{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--pine);font-weight:700;margin-bottom:10px}
+  h1{font-family:'Fraunces',serif;font-optical-sizing:auto;font-weight:600;
+     font-size:clamp(38px,7vw,68px);line-height:.96;letter-spacing:-.02em}
+  h1 em{font-style:italic;color:var(--clay)}
+  .lede{margin-top:14px;max-width:560px;color:var(--ink-soft);font-size:clamp(15px,1.6vw,17px)}
+
+  /* Assumptions bar */
+  .assume{display:flex;flex-wrap:wrap;align-items:flex-end;gap:22px 30px;margin-top:28px;
+          padding:18px 22px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+  .assume h2{font-family:'Fraunces',serif;font-size:15px;font-weight:600;letter-spacing:.01em;
+             color:var(--pine);margin-right:6px;align-self:center}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
+  .assume .ai{display:flex;align-items:baseline;gap:6px}
+  .assume input{width:90px}
+  .assume .note{font-size:12px;color:var(--ink-faint);max-width:260px;line-height:1.35;align-self:center}
+  .krav h2{color:var(--clay)}
+  .krav select{width:auto;min-width:118px}
+  #kBudsjett{width:150px}
+  #kMinBra{width:112px}
+  #kMinSov{width:74px}
+  .weights{display:flex;flex-direction:column;gap:8px;flex-basis:100%;margin-top:4px;
+           padding-top:16px;border-top:1px dashed var(--line)}
+  .rank-head{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;margin-bottom:2px}
+  .rank-row{display:flex;align-items:center;gap:11px;padding:9px 12px;background:var(--paper-2);
+            border:1px solid var(--line);border-radius:10px;cursor:grab;user-select:none;transition:border-color .15s,opacity .15s}
+  .rank-row:hover{border-color:var(--pine)}
+  .rank-row.dragging{opacity:.45;cursor:grabbing}
+  .rank-row .grip{color:var(--ink-faint);font-size:14px;letter-spacing:-2px;flex:none}
+  .rank-row .rk{font-family:'Fraunces',serif;font-weight:600;color:var(--clay);width:16px;text-align:center;flex:none}
+  .rank-row .rl{flex:1;font-size:14px;font-weight:600;color:var(--ink-soft)}
+  .rank-row .rp{font-family:'Fraunces',serif;font-weight:600;color:var(--pine);font-variant-numeric:tabular-nums;width:44px;text-align:right;flex:none}
+  .rank-row .rbtns{display:flex;gap:4px;flex:none}
+  .rbtn{width:28px;height:26px;border:1px solid var(--line);background:var(--card);border-radius:7px;
+        color:var(--ink-soft);font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .rbtn:hover:not(:disabled){border-color:var(--pine);color:var(--pine)}
+  .rbtn:disabled{opacity:.3;cursor:not-allowed}
+
+  .scoreblock{display:flex;flex-wrap:wrap;gap:22px 26px;align-items:center;margin-bottom:24px;
+              padding:18px 20px;border-radius:14px;background:var(--paper-2);border:1px solid var(--line)}
+  .score-main{text-align:center;min-width:118px}
+  .score-pct{font-family:'Fraunces',serif;font-size:46px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+  .score-band{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin-top:4px}
+  .score-sub{font-size:11px;color:var(--ink-faint);margin-top:5px}
+  .score-bars{flex:1;min-width:220px;display:flex;flex-direction:column;gap:9px}
+  .sbar{display:grid;grid-template-columns:80px 1fr 30px;align-items:center;gap:10px;font-size:12.5px}
+  .sbar .bl{color:var(--ink-soft);font-weight:600}
+  .sbar .bw{font-size:10px;color:var(--ink-faint);font-weight:500}
+  .sbar .track{display:block;width:100%;height:8px;background:var(--line-soft);border-radius:5px;overflow:hidden}
+  .sbar .fill{display:block;height:100%;min-width:2px;background:var(--pine);border-radius:5px;transition:width .3s ease}
+  .sbar .sv{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink-soft)}
+  .score-notes{display:flex;flex-wrap:wrap;gap:7px;flex-basis:100%}
+  .score-summary{flex-basis:100%;font-size:13.5px;line-height:1.55;color:var(--ink-soft);border-top:1px solid var(--line-soft);padding-top:12px;margin-top:4px}
+  .chip{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid}
+  .chip.bad{color:var(--tg3);border-color:#e3c9c1;background:var(--tg3-bg)}
+  .chip.good{color:var(--pro);border-color:#cdddd0;background:var(--best-bg)}
+
+  input,textarea,select{
+    font-family:inherit;font-size:15px;color:var(--ink);background:var(--paper-2);
+    border:1px solid var(--line);border-radius:9px;padding:9px 11px;width:100%;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--pine);box-shadow:0 0 0 3px rgba(42,74,61,.13)}
+  .suffix{position:relative}
+  .suffix>span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--ink-faint);font-size:13px;pointer-events:none}
+  .suffix input{padding-right:42px}
+
+  /* Buttons */
+  button{font-family:inherit;cursor:pointer;border:none;border-radius:9px;font-weight:600;font-size:14px;transition:transform .08s,background .15s,opacity .15s}
+  button:active{transform:translateY(1px)}
+  .btn-primary{background:var(--pine);color:#f6f2e6;padding:11px 20px}
+  .btn-primary:hover{background:var(--pine-soft)}
+  .btn-ghost{background:transparent;color:var(--pine);border:1px solid var(--line);padding:10px 16px}
+  .btn-ghost:hover{background:var(--paper-2);border-color:var(--pine)}
+  .btn-clay{background:var(--clay);color:#f6f2e6;padding:11px 20px}
+  .btn-clay:hover{opacity:.9}
+  .btn-sm{font-size:12px;padding:6px 11px}
+  button:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Input panel */
+  .panel{margin-top:30px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+         box-shadow:var(--shadow);overflow:hidden}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;
+              padding:18px 22px;border-bottom:1px solid var(--line-soft);background:var(--paper-2)}
+  .panel-head h2{font-family:'Fraunces',serif;font-size:21px;font-weight:600}
+  .panel-body{padding:22px}
+  .paste-row{display:grid;grid-template-columns:1fr;gap:12px}
+  .paste-row textarea{min-height:120px;resize:vertical;line-height:1.5;font-size:14px}
+  .paste-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+  .hint{font-size:13px;color:var(--ink-faint)}
+  .err{color:var(--clay);font-size:13px;font-weight:600}
+  .spinner{width:15px;height:15px;border:2px solid rgba(246,242,230,.4);border-top-color:#f6f2e6;border-radius:50%;display:inline-block;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:7px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .upload{display:flex;flex-wrap:wrap;align-items:center;gap:14px;
+          border:1.5px dashed var(--line);border-radius:13px;padding:16px 18px;background:var(--paper-2);margin-bottom:14px}
+  .upload .ic{width:30px;height:30px;flex:none;color:var(--pine)}
+  .upload .txt{flex:1;min-width:160px}
+  .upload .txt b{font-family:'Fraunces',serif;font-weight:600;font-size:15px;display:block}
+  .upload .txt span{font-size:12.5px;color:var(--ink-faint)}
+  .pdfname{font-size:13px;color:var(--pine);font-weight:600}
+
+  .divider{display:flex;align-items:center;gap:14px;margin:24px 0;color:var(--ink-faint);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px 18px}
+  .form-grid .field{gap:6px}
+  .form-grid label{font-size:11px}
+  .save-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;align-items:center}
+
+  /* Comparison */
+  .compare-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:46px 0 16px}
+  .compare-head h2{font-family:'Fraunces',serif;font-size:clamp(24px,3vw,32px);font-weight:600}
+  .compare-head .count{color:var(--ink-faint);font-size:14px}
+  .empty{margin-top:30px;padding:48px 28px;text-align:center;border:1.5px dashed var(--line);border-radius:16px;color:var(--ink-soft)}
+  .empty strong{font-family:'Fraunces',serif;font-size:20px;color:var(--ink);display:block;margin-bottom:6px;font-weight:600}
+
+  .table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);background:var(--card)}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  thead th{background:var(--paper-2);position:sticky;top:0}
+  tbody tr:last-child td{border-bottom:none}
+  .rowlabel{font-weight:600;color:var(--ink-soft);font-size:13px;white-space:nowrap;
+            position:sticky;left:0;background:var(--card);z-index:2;border-right:1px solid var(--line-soft)}
+  thead .rowlabel{background:var(--paper-2);z-index:3}
+  .section-row td{background:var(--pine);color:#e9e2d2;font-family:'Fraunces',serif;font-size:13px;
+                  letter-spacing:.04em;font-weight:600;padding:9px 16px;position:sticky;left:0}
+  .home-th{min-width:180px}
+  .home-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;line-height:1.15;color:var(--ink)}
+  .home-sub{font-size:12px;color:var(--ink-faint);margin-top:3px}
+  .th-actions{display:flex;gap:6px;margin-top:11px}
+  .cell-val{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+  .cell-big{font-size:17px}
+  .cell-na{color:var(--ink-faint);font-weight:400}
+  .best{background:var(--best-bg)}
+  .best .cell-val{color:var(--pine)}
+  .badge{display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+         background:var(--pine);color:#eef2e8;border-radius:5px;padding:2px 6px;margin-left:7px;font-weight:700;vertical-align:1px}
+
+  /* Detail cards */
+  .details{margin-top:36px;display:flex;flex-direction:column;gap:14px}
+  .details-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:2px}
+  .details-h{font-family:'Fraunces',serif;font-size:clamp(22px,3vw,30px);font-weight:600}
+  .dcard{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .dcard-head{padding:16px 20px;background:var(--paper-2);cursor:pointer;
+              display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;transition:background .15s}
+  .dcard-head:hover{background:var(--paper)}
+  .dcard.open .dcard-head{border-bottom:1px solid var(--line-soft)}
+  .dcard-head .chev{font-size:24px;line-height:1;color:var(--ink-faint);flex:none;
+                    transition:transform .2s ease;transform:translateY(-1px)}
+  .dcard.open .dcard-head .chev{transform:rotate(90deg)}
+  .dcard-head .dh-main{flex:1;min-width:160px;display:flex;flex-direction:column;gap:2px}
+  .dcard-head .nm{font-family:'Fraunces',serif;font-size:20px;font-weight:600;line-height:1.1}
+  .dcard-head .meta{font-size:12.5px;color:var(--ink-faint)}
+  .score-pill{font-family:'Fraunces',serif;font-size:14px;font-weight:600;white-space:nowrap;
+              padding:4px 13px;border:1px solid var(--line);border-radius:20px;background:var(--card)}
+  .dcard-body{padding:22px;display:none}
+  .dcard.open .dcard-body{display:block}
+  .vurdering{font-size:15.5px;line-height:1.62;color:var(--ink);margin-bottom:22px;
+             border-left:3px solid var(--pine);padding-left:16px}
+  .pc{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:8px}
+  .pc h4{font-family:'Fraunces',serif;font-size:14px;font-weight:600;margin-bottom:9px;letter-spacing:.02em}
+  .pc ul{list-style:none}
+  .pc li{font-size:14px;line-height:1.5;padding-left:22px;position:relative;margin-bottom:8px;color:var(--ink-soft)}
+  .pc li::before{position:absolute;left:0;top:-1px;font-weight:700}
+  .pros h4{color:var(--pro)} .pros li::before{content:"+";color:var(--pro)}
+  .cons h4{color:var(--con)} .cons li::before{content:"–";color:var(--con)}
+
+  .tg-block{margin-top:24px}
+  .tg-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .tg-h .tag{font-family:'Fraunces',serif;font-size:13px;font-weight:700;letter-spacing:.04em;
+             padding:3px 10px;border-radius:6px;color:#fff}
+  .tg-h.three .tag{background:var(--tg3)} .tg-h.two .tag{background:var(--tg2c)}
+  .tg-h .lbl{font-size:13px;color:var(--ink-soft);font-weight:600}
+  .tg-item{border-radius:11px;padding:13px 15px;margin-bottom:10px;border:1px solid}
+  .tg-item.three{background:var(--tg3-bg);border-color:#e3c9c1}
+  .tg-item.two{background:var(--tg2-bg);border-color:#e2d6b6}
+  .tg-item .tema{font-weight:700;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+  .tg-item.three .tema{color:var(--tg3)} .tg-item.two .tema{color:var(--tg2c)}
+  .tg-item .kost{font-size:12.5px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .tg-item .desc{font-size:13.5px;line-height:1.5;color:var(--ink-soft);margin-top:5px}
+  .tg-none{font-size:13.5px;color:var(--ink-faint);font-style:italic}
+
+  .estimate{margin-top:24px;padding:16px 18px;border-radius:13px;background:var(--paper-2);border:1px solid var(--line)}
+  .estimate .top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px}
+  .estimate .ttl{font-family:'Fraunces',serif;font-size:14px;font-weight:600}
+  .estimate .amt{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--clay);font-variant-numeric:tabular-nums}
+  .estimate .cmt{font-size:12.5px;color:var(--ink-faint);margin-top:7px;line-height:1.45}
+  .dcard-empty{padding:22px;font-size:14px;color:var(--ink-faint);font-style:italic}
+
+  @media(max-width:560px){ .pc{grid-template-columns:1fr;gap:14px} }
+
+  footer{margin-top:30px;font-size:12px;color:var(--ink-faint);line-height:1.6;max-width:760px}
+  footer .clear{margin-top:12px}
+
+  .backup{margin-top:40px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;
+          padding:18px 22px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+  .backup-txt b{font-family:'Fraunces',serif;font-weight:600;font-size:16px;display:block}
+  .backup-txt span{font-size:13px;color:var(--ink-faint)}
+  .backup-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+  .modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(33,31,24,.45);
+         align-items:center;justify-content:center;padding:20px}
+  .modal-box{background:var(--card);border:1px solid var(--line);border-radius:16px;
+             padding:22px;max-width:560px;width:100%;box-shadow:var(--shadow)}
+  .modal-box h3{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-bottom:8px}
+  .modal-box p{font-size:13.5px;color:var(--ink-soft);margin-bottom:12px;line-height:1.5}
+  .modal-box code{background:var(--paper-2);padding:1px 6px;border-radius:5px;font-size:12.5px}
+  .modal-box textarea{width:100%;height:200px;font-family:ui-monospace,monospace;font-size:12px;resize:vertical}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+
+  @media(max-width:560px){
+    .assume{gap:16px 20px}
+    th,td{padding:11px 12px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Salgsoppgave + takst → vurdering</div>
+    <h1>Husjakt<em>.</em></h1>
+    <p class="lede">Last opp salgsoppgaven og tilstandsrapporten for hver bolig. Appen tolker dokumentene, setter opp fordeler og ulemper, henter ut TG2- og TG3-avvik med kostnadsestimat, og sammenligner boligene side om side.</p>
+
+    <div class="assume">
+      <h2>Lånekalkyle</h2>
+      <div class="field">
+        <label for="rente">Rente</label>
+        <div class="suffix"><input id="rente" type="number" step="0.05" value="5.5"><span>%</span></div>
+      </div>
+      <div class="field">
+        <label for="lopetid">Løpetid</label>
+        <div class="suffix"><input id="lopetid" type="number" step="1" value="25"><span>år</span></div>
+      </div>
+      <p class="note">Antar full lånefinansiering av totalprisen — kun for å sammenligne boligene likt.</p>
+    </div>
+
+    <div class="assume krav">
+      <h2>Dine krav</h2>
+      <div class="field">
+        <label for="kBudsjett">Budsjett-tak</label>
+        <div class="suffix"><input id="kBudsjett" type="number" step="50000" placeholder="f.eks. 5000000"><span>kr</span></div>
+      </div>
+      <div class="field">
+        <label for="kStreng">Pristak</label>
+        <select id="kStreng"><option value="1">Strengt</option><option value="0">Litt fleksibelt</option><option value="-1">Fleksibelt</option></select>
+      </div>
+      <div class="field">
+        <label for="kMinBra">Minste BRA</label>
+        <div class="suffix"><input id="kMinBra" type="number" step="1" placeholder="f.eks. 70"><span>m²</span></div>
+      </div>
+      <div class="field">
+        <label for="kMinSov">Minste soverom</label>
+        <input id="kMinSov" type="number" step="1" placeholder="f.eks. 3">
+      </div>
+      <div class="field">
+        <label for="kTg3">TG3-toleranse</label>
+        <select id="kTg3"><option value="avoid">Unngå helt</option><option value="comp">OK m/ kompensasjon</option><option value="ok">Greit</option></select>
+      </div>
+      <div class="weights" id="weights"><div class="rank-head">Prioritering — viktigst øverst (dra, eller bruk pilene)</div><div class="rank-row" draggable="true" data-idx="0"><span class="grip">⠿</span><span class="rk">1</span><span class="rl">Størrelse og planløsning</span><span class="rp">40%</span><span class="rbtns"><button class="rbtn" data-up="0" disabled="" title="Flytt opp">▲</button><button class="rbtn" data-down="0" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="1"><span class="grip">⠿</span><span class="rk">2</span><span class="rl">Uteareal</span><span class="rp">30%</span><span class="rbtns"><button class="rbtn" data-up="1" title="Flytt opp">▲</button><button class="rbtn" data-down="1" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="2"><span class="grip">⠿</span><span class="rk">3</span><span class="rl">Standard og tilstand</span><span class="rp">20%</span><span class="rbtns"><button class="rbtn" data-up="2" title="Flytt opp">▲</button><button class="rbtn" data-down="2" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="3"><span class="grip">⠿</span><span class="rk">4</span><span class="rl">Pris og økonomi</span><span class="rp">10%</span><span class="rbtns"><button class="rbtn" data-up="3" title="Flytt opp">▲</button><button class="rbtn" data-down="3" disabled="" title="Flytt ned">▼</button></span></div></div>
+    </div>
+  </header>
+
+  <!-- Input panel -->
+  <div class="panel">
+    <div class="panel-head">
+      <h2 id="panelTitle">Legg til en bolig</h2>
+      <button class="btn-ghost btn-sm" id="cancelEdit" style="display: none;">Avbryt redigering</button>
+    </div>
+    <div class="panel-body">
+      <div class="upload">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M12 18v-6"></path><path d="m9 15 3-3 3 3"></path></svg>
+        <div class="txt">
+          <b>Last opp salgsoppgave + tilstandsrapport (PDF)</b>
+          <span id="pdfStatus">Velg gjerne begge dokumentene samtidig. Teksten leses ut i nettleseren din.</span>
+        </div>
+        <button class="btn-primary" id="pdfBtn">Velg PDF-filer</button>
+        <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple="" style="display:none">
+      </div>
+
+      <div class="paste-row">
+        <div class="field">
+          <label for="paste">… eller lim inn tekst fra salgsoppgaven (eller bare nøkkeltallene)</label>
+          <textarea id="paste" placeholder="Eks: Prisantydning 4 500 000 kr. Omkostninger 120 000 kr. Fellesgjeld 350 000 kr. Felleskostnader 3 200 kr/mnd. BRA-i 78 m². Byggeår 1968. Selveier. 3 soverom ..."></textarea>
+        </div>
+      </div>
+      <div class="paste-actions">
+        <button class="btn-primary" id="extractBtn">Analyser tekst</button>
+        <span class="hint">Tolker teksten og fyller ut feltene — du kan rette dem etterpå.</span>
+        <span class="err" id="extractErr"></span>
+      </div>
+
+      <div class="divider">eller fyll ut manuelt</div>
+
+      <div class="form-grid" id="formGrid"><div class="field"><label for="f_adresse">Adresse / navn</label><input id="f_adresse" type="text"></div><div class="field"><label for="f_boligtype">Boligtype</label><input id="f_boligtype" type="text"></div><div class="field"><label for="f_eierform">Eierform</label><input id="f_eierform" type="text"></div><div class="field"><label for="f_prisantydning">Prisantydning</label><div class="suffix"><input id="f_prisantydning" type="number" step="any"><span>kr</span></div></div><div class="field"><label for="f_omkostninger">Omkostninger</label><div class="suffix"><input id="f_omkostninger" type="number" step="any"><span>kr</span></div></div><div class="field"><label for="f_fellesgjeld">Fellesgjeld</label><div class="suffix"><input id="f_fellesgjeld" type="number" step="any"><span>kr</span></div></div><div class="field"><label for="f_felleskostnader">Felleskostnader / mnd</label><div class="suffix"><input id="f_felleskostnader" type="number" step="any"><span>kr</span></div></div><div class="field"><label for="f_bruksareal">Bruksareal (BRA-i/P-rom)</label><div class="suffix"><input id="f_bruksareal" type="number" step="any"><span>m²</span></div></div><div class="field"><label for="f_byggeaar">Byggeår</label><input id="f_byggeaar" type="number"></div><div class="field"><label for="f_soverom">Soverom</label><input id="f_soverom" type="number"></div><div class="field"><label for="f_etasje">Etasje</label><input id="f_etasje" type="text"></div><div class="field"><label for="f_energimerke">Energimerke</label><input id="f_energimerke" type="text"></div><div class="field"><label for="f_uteareal">Uteareal (1–5, din vurdering)</label><input id="f_uteareal" type="number"></div></div>
+
+      <div class="save-row">
+        <button class="btn-primary" id="saveBtn">Lagre bolig</button>
+        <span class="hint" id="saveHint"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison -->
+  <div class="compare-head">
+    <h2>Sammenligning</h2>
+    <span class="count" id="count">6 boliger</span>
+  </div>
+  <div id="compareArea"><div class="table-scroll"><table><thead><tr><th class="rowlabel"></th><th class="home-th"><div class="home-name">Hansemyrveien 30 B, 0880 Oslo</div><div class="home-sub">Vertikaldelt tomannsbolig · Eierseksjon</div><div class="th-actions"><button class="btn-ghost btn-sm" data-edit="1780601171531-53k0">Rediger</button><button class="btn-ghost btn-sm" data-del="1780601171531-53k0">Slett</button></div></th><th class="home-th"><div class="home-name">Maridalsveien 360C, 0881 Oslo</div><div class="home-sub">Tomannsbolig (halvpart, vertikaldelt) · Eierseksjon</div><div class="th-actions"><button class="btn-ghost btn-sm" data-edit="1780601395037-ewt6">Rediger</button><button class="btn-ghost btn-sm" data-del="1780601395037-ewt6">Slett</button></div></th><th class="home-th"><div class="home-name">Grefsenkollveien 6B, 0490 Oslo</div><div class="home-sub">Tomannsbolig (vertikaldelt) · Eiet</div><div class="th-actions"><button class="btn-ghost btn-sm" data-edit="1780601689270-fgia">Rediger</button><button class="btn-ghost btn-sm" data-del="1780601689270-fgia">Slett</button></div></th><th class="home-th"><div class="home-name">Rundhaugveien 29, 0495 Oslo</div><div class="home-sub">Enebolig - Frittliggende · Eierseksjon</div><div class="th-actions"><button class="btn-ghost btn-sm" data-edit="1780601794800-f436">Rediger</button><button class="btn-ghost btn-sm" data-del="1780601794800-f436">Slett</button></div></th><th class="home-th"><div class="home-name">Lofthusveien 51 B, 0588 Oslo</div><div class="home-sub">Rekkehus · Eierseksjon</div><div class="th-actions"><button class="btn-ghost btn-sm" data-edit="1780601907061-b26j">Rediger</button><button class="btn-ghost btn-sm" data-del="1780601907061-b26j">Slett</button></div></th><th class="home-th"><div class="home-name">Radioveien 13J, 0884 Oslo</div><div class="home-sub">Rekkehus · Eierseksjon</div><div class="th-actions"><button class="btn-ghost btn-sm" data-edit="1780602006305-q31o">Rediger</button><button class="btn-ghost btn-sm" data-del="1780602006305-q31o">Slett</button></div></th></tr></thead><tbody><tr class="section-row"><td colspan="7">Totalvurdering</td></tr><tr><td class="rowlabel">Kjøpsscore</td><td class="best"><span class="cell-val cell-big">83% · Sterkt kjøp</span><span class="badge">Best</span></td><td class=""><span class="cell-val cell-big">68% · Godt kjøp</span></td><td class=""><span class="cell-val cell-big">46% · Middels</span></td><td class=""><span class="cell-val cell-big">17% · Svakt</span></td><td class=""><span class="cell-val cell-big">63% · Godt kjøp</span></td><td class=""><span class="cell-val cell-big">68% · Godt kjøp</span></td></tr><tr class="section-row"><td colspan="7">Pris</td></tr><tr><td class="rowlabel">Prisantydning</td><td class=""><span class="cell-val">14&nbsp;800&nbsp;000 kr</span></td><td class=""><span class="cell-val">14&nbsp;500&nbsp;000 kr</span></td><td class=""><span class="cell-val">14&nbsp;100&nbsp;000 kr</span></td><td class="best"><span class="cell-val">11&nbsp;500&nbsp;000 kr</span></td><td class=""><span class="cell-val">12&nbsp;800&nbsp;000 kr</span></td><td class=""><span class="cell-val">13&nbsp;600&nbsp;000 kr</span></td></tr><tr><td class="rowlabel">Omkostninger</td><td class=""><span class="cell-val">390&nbsp;990 kr</span></td><td class=""><span class="cell-val">363&nbsp;590 kr</span></td><td class=""><span class="cell-val">353&nbsp;590 kr</span></td><td class="best"><span class="cell-val">308&nbsp;490 kr</span></td><td class=""><span class="cell-val">321&nbsp;350 kr</span></td><td class=""><span class="cell-val">341&nbsp;090 kr</span></td></tr><tr><td class="rowlabel">Fellesgjeld</td><td class=""><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">0 kr</span></td></tr><tr><td class="rowlabel">Totalpris</td><td class=""><span class="cell-val cell-big">15&nbsp;190&nbsp;990 kr</span></td><td class=""><span class="cell-val cell-big">14&nbsp;863&nbsp;590 kr</span></td><td class=""><span class="cell-val cell-big">14&nbsp;453&nbsp;590 kr</span></td><td class="best"><span class="cell-val cell-big">11&nbsp;808&nbsp;490 kr</span><span class="badge">Best</span></td><td class=""><span class="cell-val cell-big">13&nbsp;121&nbsp;350 kr</span></td><td class=""><span class="cell-val cell-big">13&nbsp;941&nbsp;090 kr</span></td></tr><tr><td class="rowlabel">Pris per m²</td><td class=""><span class="cell-val">109&nbsp;288 kr</span></td><td class=""><span class="cell-val">88&nbsp;474 kr</span></td><td class=""><span class="cell-val">108&nbsp;674 kr</span></td><td class=""><span class="cell-val">121&nbsp;737 kr</span></td><td class="best"><span class="cell-val">79&nbsp;523 kr</span><span class="badge">Best</span></td><td class=""><span class="cell-val">111&nbsp;529 kr</span></td></tr><tr class="section-row"><td colspan="7">Bolig</td></tr><tr><td class="rowlabel">Boligtype</td><td class=""><span class="cell-val">Vertikaldelt tomannsbolig</span></td><td class=""><span class="cell-val">Tomannsbolig (halvpart, vertikaldelt)</span></td><td class=""><span class="cell-val">Tomannsbolig (vertikaldelt)</span></td><td class=""><span class="cell-val">Enebolig - Frittliggende</span></td><td class=""><span class="cell-val">Rekkehus</span></td><td class=""><span class="cell-val">Rekkehus</span></td></tr><tr><td class="rowlabel">Eierform</td><td class=""><span class="cell-val">Eierseksjon</span></td><td class=""><span class="cell-val">Eierseksjon</span></td><td class=""><span class="cell-val">Eiet</span></td><td class=""><span class="cell-val">Eierseksjon</span></td><td class=""><span class="cell-val">Eierseksjon</span></td><td class=""><span class="cell-val">Eierseksjon</span></td></tr><tr><td class="rowlabel">Bruksareal</td><td class=""><span class="cell-val">139 m²</span></td><td class="best"><span class="cell-val">168 m²</span></td><td class=""><span class="cell-val">133 m²</span></td><td class=""><span class="cell-val">97 m²</span></td><td class=""><span class="cell-val">165 m²</span></td><td class=""><span class="cell-val">125 m²</span></td></tr><tr><td class="rowlabel">Soverom</td><td class=""><span class="cell-val">3</span></td><td class=""><span class="cell-val">3</span></td><td class=""><span class="cell-val">3</span></td><td class=""><span class="cell-val">3</span></td><td class=""><span class="cell-val">3</span></td><td class=""><span class="cell-val">3</span></td></tr><tr><td class="rowlabel">Byggeår</td><td class=""><span class="cell-val">1967</span></td><td class=""><span class="cell-val">2011</span></td><td class=""><span class="cell-val">1971</span></td><td class=""><span class="cell-val">1913</span></td><td class=""><span class="cell-val">2003</span></td><td class="best"><span class="cell-val">2015</span></td></tr><tr><td class="rowlabel">Etasje</td><td class=""><span class="cell-val">3 plan (kjeller, 1. og 2. etasje)</span></td><td class=""><span class="cell-val">2 etasjer + kjeller</span></td><td class=""><span class="cell-val">2 etasjer (1. etasje + underetasje)</span></td><td class=""><span class="cell-val">2 etasjer + kjeller</span></td><td class=""><span class="cell-val">Kjeller + 1. etasje + 2. etasje</span></td><td class=""><span class="cell-val">3 etasjer + takterrasse</span></td></tr><tr><td class="rowlabel">Energimerke</td><td class=""><span class="cell-val">E</span></td><td class=""><span class="cell-val">C</span></td><td class=""><span class="cell-val">G</span></td><td class=""><span class="cell-val">G</span></td><td class=""><span class="cell-val">Ikke oppgitt</span></td><td class=""><span class="cell-val">C</span></td></tr><tr class="section-row"><td colspan="7">Tilstand &amp; kostnad</td></tr><tr><td class="rowlabel">TG3-avvik (alvorlige)</td><td class="best"><span class="cell-val">0 avvik</span><span class="badge">Best</span></td><td class=""><span class="cell-val">0 avvik</span></td><td class=""><span class="cell-val">1 avvik</span></td><td class=""><span class="cell-val">2 avvik</span></td><td class=""><span class="cell-val">0 avvik</span></td><td class=""><span class="cell-val">1 avvik</span></td></tr><tr><td class="rowlabel">TG2-avvik</td><td class=""><span class="cell-val">19 avvik</span></td><td class=""><span class="cell-val">13 avvik</span></td><td class=""><span class="cell-val">19 avvik</span></td><td class=""><span class="cell-val">11 avvik</span></td><td class="best"><span class="cell-val">6 avvik</span></td><td class=""><span class="cell-val">10 avvik</span></td></tr><tr><td class="rowlabel">Est. utbedring</td><td class=""><span class="cell-val">110&nbsp;000 kr – 490&nbsp;000 kr</span></td><td class=""><span class="cell-val">480&nbsp;000 kr – 1&nbsp;205&nbsp;000 kr</span></td><td class=""><span class="cell-val">482&nbsp;000 kr – 1&nbsp;311&nbsp;000 kr</span></td><td class=""><span class="cell-val">428&nbsp;700 kr – 1&nbsp;235&nbsp;000 kr</span></td><td class=""><span class="cell-val">260&nbsp;000 kr – 720&nbsp;000 kr</span></td><td class="best"><span class="cell-val">44&nbsp;000 kr – 220&nbsp;000 kr</span><span class="badge">Best</span></td></tr><tr><td class="rowlabel">Totalpris + utbedring</td><td class=""><span class="cell-val cell-big">15&nbsp;490&nbsp;990 kr</span></td><td class=""><span class="cell-val cell-big">15&nbsp;706&nbsp;090 kr</span></td><td class=""><span class="cell-val cell-big">15&nbsp;350&nbsp;090 kr</span></td><td class="best"><span class="cell-val cell-big">12&nbsp;640&nbsp;340 kr</span><span class="badge">Best</span></td><td class=""><span class="cell-val cell-big">13&nbsp;611&nbsp;350 kr</span></td><td class=""><span class="cell-val cell-big">14&nbsp;073&nbsp;090 kr</span></td></tr><tr class="section-row"><td colspan="7">Bokostnader</td></tr><tr><td class="rowlabel">Felleskostnader / mnd</td><td class="best"><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">0 kr</span></td><td class=""><span class="cell-val">5&nbsp;000 kr</span></td><td class=""><span class="cell-val">3&nbsp;279 kr</span></td></tr><tr><td class="rowlabel">Est. bokostnad / mnd</td><td class=""><span class="cell-val cell-big">100&nbsp;674 kr</span></td><td class=""><span class="cell-val cell-big">98&nbsp;504 kr</span></td><td class=""><span class="cell-val cell-big">95&nbsp;787 kr</span></td><td class="best"><span class="cell-val cell-big">78&nbsp;257 kr</span><span class="badge">Best</span></td><td class=""><span class="cell-val cell-big">91&nbsp;958 kr</span></td><td class=""><span class="cell-val cell-big">95&nbsp;670 kr</span></td></tr></tbody></table></div></div>
+  <div id="detailsArea"><div class="details"><div class="details-top"><div class="details-h">Vurdering per bolig</div><button class="btn-ghost btn-sm" id="toggleAll">Åpne alle</button></div><div class="dcard"><div class="dcard-head" data-toggle="1780601171531-53k0"><span class="chev">›</span><span class="dh-main"><span class="nm">Hansemyrveien 30 B, 0880 Oslo</span><span class="meta">Vertikaldelt tomannsbolig · Eierseksjon · 139 m² · 1967</span></span><span class="score-pill" style="color:var(--pine)">83% · Sterkt kjøp</span></div><div class="dcard-body"><div class="scoreblock"><div class="score-main"><div class="score-pct" style="color:var(--pine)">83%</div><div class="score-band" style="color:var(--pine)">Sterkt kjøp</div><div class="score-sub">veiledende, ut fra dine krav</div></div><div class="score-bars"><div class="sbar"><span class="bl">Størrelse <span class="bw">40%</span></span><span class="track"><span class="fill" style="width:81%"></span></span><span class="sv">81</span></div><div class="sbar"><span class="bl">Uteareal <span class="bw">30%</span></span><span class="track"><span class="fill" style="width:100%"></span></span><span class="sv">100</span></div><div class="sbar"><span class="bl">Standard <span class="bw">20%</span></span><span class="track"><span class="fill" style="width:72%"></span></span><span class="sv">72</span></div><div class="sbar"><span class="bl">Pris <span class="bw">10%</span></span><span class="track"><span class="fill" style="width:66%"></span></span><span class="sv">66</span></div></div><div class="score-notes"><span class="chip good">God margin til budsjett</span><span class="chip bad">19 TG2-avvik</span><span class="chip good">Romslig</span></div><div class="score-summary">Scoren er høy, drevet av sterk uteareal (100/100) vektet mot dine prioriteringer. Boligen er godt innenfor budsjett, noe som gir ekstra rom.</div></div><div class="vurdering">Boligen er jevnlig vedlikeholdt og har gjennomgått betydelige oppgraderinger de siste årene, særlig bad/vaskerom og kjøkken i 2022 samt nye rør og el-arbeider. Bygget er fra 1967 og bærer preg av alderen på en del konstruksjoner, men de viktigste tekniske installasjonene er fornyet. Kjøper bør merke seg at drenering kun er fornyet på nordsiden (2017), at balkongens tettesjikt nærmer seg slutten av levetiden, og at det er en rekke mindre TG2-avvik som samlet sett krever et visst vedlikehold. Tomten er under fradeling, noe som medfører endrede tomteforhold etter overtakelse.</div><div class="pc"><div class="pros"><h4>Fordeler</h4><ul><li>Kjøkken, bad og vaskerom totalrenovert i 2022 med faglært utførelse og ferdigattest</li><li>Alle innvendige rør byttet til rør-i-rør-system (2022) og nye soilrør (2021)</li><li>Solrik vestvendt terrasse og hage med markise</li><li>Inntilbygget garasje med elbil-lader (2024)</li><li>Nærhet til Nordmarka, Korsvoll skole og gode kollektivtilbud</li><li>Utbyggingspotensial – rammetillatelse fra 2019 (ikke benyttet)</li><li>Ingen felleskostnader – seksjonene svarer for egne driftsutgifter</li></ul></div><div class="cons"><h4>Ulemper</h4><ul><li>Energimerke E – høyt energiforbruk (22 066 kWh foregående år)</li><li>Drenering kun fornyet på nordsiden; ukjent alder på syd- og vestside</li><li>Balkongtettesjikt har passert halvparten av forventet levetid</li><li>Fastkarm stuevindu er eldre med ukjent alder og redusert isoleringsevne</li><li>Toalettrom i 2. etasje har skader i gulvfliser, svelt innredning og kun naturlig avtrekk</li><li>Varmtvannstank mangler tilfredsstillende el-tilkobling etter gjeldende forskrift</li><li>Rekkverk og åpninger i balkong er ikke i henhold til dagens krav (HMS-avvik)</li><li>Kullfilterventilator på kjøkken – ingen mekanisk avtrekksløsning fra kokesone</li><li>Tomtesituasjonen er under endring (fradeling pågår)</li></ul></div></div><div class="tg-block"><div class="tg-h three"><span class="tag">TG3</span><span class="lbl">Vesentlige avvik / strakstiltak</span></div><div class="tg-none">Ingen TG3-avvik registrert.</div></div><div class="tg-block"><div class="tg-h two"><span class="tag">TG2</span><span class="lbl">Avvik som kan kreve tiltak</span></div><div class="tg-item two"><div class="tema"><span>Snøfangere/nedløp og beslag</span><span class="kost">20&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Mangler snøfangere på hele eller deler av taket. Snø- og isras kan utgjøre fare ved adkomst og inngangsparti.</div></div><div class="tg-item two"><div class="tema"><span>Veggkonstruksjon</span><span class="kost">0 kr – 0 kr</span></div><div class="desc">Ingen eller liten lufting i nedre kant av kledning mot grunnmur. Takstmann vurderer at det ikke er behov for utbedringstiltak nå, men forholdet bør følges med på.</div></div><div class="tg-item two"><div class="tema"><span>Takkonstruksjon/loft</span><span class="kost">0 kr – 0 kr</span></div><div class="desc">Begrenset/dårlig ventilering av takkonstruksjonen i skråtak. Fra inspeksjonsluke i 2. etasje er det ikke observert unormale skader på undertaket.</div></div><div class="tg-item two"><div class="tema"><span>Vinduer – fastkarm stue</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Fastkarmvindu i stuen er eldre med ukjent alder, redusert isoleringsevne og begrenset levetid. Bør påregnes byttet innen noen år.</div></div><div class="tg-item two"><div class="tema"><span>Dører – utvendige karmer og terskler</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Karmene i dører er værslitte utvendig med sprekker i trevirket. Treskler på skyvedører er slitte og bør pusses og overflatebehandles.</div></div><div class="tg-item two"><div class="tema"><span>Balkong – tettesjikt/membran</span><span class="kost">10&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Mer enn halvparten av forventet brukstid er passert på tettesjikt/membran på balkong i 2. etasje. Utskiftning nærmer seg.</div></div><div class="tg-item two"><div class="tema"><span>Utvendige trapper</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Liten råteskade i tretrapp til stue/kjøkken. Råteskadet del bør byttes ut.</div></div><div class="tg-item two"><div class="tema"><span>Innvendige overflater</span><span class="kost">20&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Ufullstendig maling og ujevne overflater stedvis i huset som følge av gjentatt maling. Bør males for å få hele og jevne flater.</div></div><div class="tg-item two"><div class="tema"><span>Etasjeskille/gulv</span><span class="kost">0 kr – 0 kr</span></div><div class="desc">Målt høydeforskjell på 10–20 mm innenfor 2 meter. Kostnadseffektivt tiltak kun aktuelt ved fremtidig totalrenovering.</div></div><div class="tg-item two"><div class="tema"><span>Pipe og ildsted</span><span class="kost">0 kr – 0 kr</span></div><div class="desc">Sprekker og riss i mursteinspipe fra byggeår, observert på loftet. Ikke nødvendig å utbedre nå, men bør følges med på.</div></div><div class="tg-item two"><div class="tema"><span>Rom under terreng – bod i kjeller</span><span class="kost">0 kr – 0 kr</span></div><div class="desc">For mye innbo i boden til at vegger og gulv kan inspiseres. TG2 gis grunnet manglende inspeksjonsmulighet, ikke påvist fukt.</div></div><div class="tg-item two"><div class="tema"><span>Innvendige dører</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Enkelte innvendige dører og terskler har en del slitasje. Terskler bør slipes og lakkeres.</div></div><div class="tg-item two"><div class="tema"><span>Varmtvannstank – el-tilkobling</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">El-tilkoblingen av varmtvannstank (ca. 200 liter, antatt 2022) er ikke tilfredsstillende iht. gjeldende forskrift. Bør utbedres av registrert elektrofaglig.</div></div><div class="tg-item two"><div class="tema"><span>Fuktsikring og drenering</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Mangler topplist på drensplast stedvis, noe som kan forringe funksjon. Ukjent alder på drenering på syd- og vestsiden av huset. Ingen unormale fuktverdier målt i kjeller.</div></div><div class="tg-item two"><div class="tema"><span>Grunnmur og fundamenter</span><span class="kost">0 kr – 0 kr</span></div><div class="desc">Løs puss på muroverflater. Takstmann vurderer at det ikke er behov for utbedringstiltak.</div></div><div class="tg-item two"><div class="tema"><span>Kjøkken – avtrekk</span><span class="kost">10&nbsp;000 kr – 50&nbsp;000 kr</span></div><div class="desc">Kun kullfilterventilator på kjøkkenet, ingen mekanisk/forsert avtrekksløsning fra kokesonen. Bør etableres om mulig.</div></div><div class="tg-item two"><div class="tema"><span>Bad kjeller – gulvfall</span><span class="kost">0 kr – 0 kr</span></div><div class="desc">Stedvis fall under kravet 1:100 (målt 1:120). Vann ledes fortsatt mot sluk, men med redusert effektivitet. Takstmann ser ikke behov for utbedring nå.</div></div><div class="tg-item two"><div class="tema"><span>Vaskerom kjeller – ventilasjon</span><span class="kost">0 kr – 0 kr</span></div><div class="desc">Kun naturlig ventilasjon i vaskerommet. Takstmann vurderer at eksisterende løsning (lufteluker og vindu) er tilstrekkelig slik rommet brukes i dag.</div></div><div class="tg-item two"><div class="tema"><span>Toalettrom 2. etasje</span><span class="kost">20&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Skader på gulvfliser rundt wc (fra dobytte), svellet innredning som bør byttes, og kun naturlig avtrekk (NS 3600 krever mekanisk). Lokal utbedring nødvendig.</div></div></div><div class="estimate"><div class="top"><span class="ttl">Samlet kostnadsestimat for utbedring</span><span class="amt">110&nbsp;000 kr – 490&nbsp;000 kr</span></div><div class="cmt">Estimatet er basert på takstrapportens egne sjablongmessige kostnadsintervaller der disse er oppgitt. For poster der takstmann ikke har angitt kostnad (veggkonstruksjon, takkonstruksjon, etasjeskille, pipe, rom under terreng, grunnmur, bad gulvfall, vaskerom ventilasjon) er kostnaden satt til null da takstmann eksplisitt vurderer at utbedring ikke er nødvendig nå. De største usikkerhetene knytter seg til snøfangere (20 000–100 000 kr avhengig av takets omfang og tilkomst) og innvendige overflater (20 000–100 000 kr avhengig av ambisjonsnivå). Samlet intervall er grovt og faktiske kostnader kan avvike betydelig.</div></div></div></div><div class="dcard"><div class="dcard-head" data-toggle="1780601395037-ewt6"><span class="chev">›</span><span class="dh-main"><span class="nm">Maridalsveien 360C, 0881 Oslo</span><span class="meta">Tomannsbolig (halvpart, vertikaldelt) · Eierseksjon · 168 m² · 2011</span></span><span class="score-pill" style="color:var(--gold)">68% · Godt kjøp</span></div><div class="dcard-body"><div class="scoreblock"><div class="score-main"><div class="score-pct" style="color:var(--gold)">68%</div><div class="score-band" style="color:var(--gold)">Godt kjøp</div><div class="score-sub">veiledende, ut fra dine krav</div></div><div class="score-bars"><div class="sbar"><span class="bl">Størrelse <span class="bw">40%</span></span><span class="track"><span class="fill" style="width:100%"></span></span><span class="sv">100</span></div><div class="sbar"><span class="bl">Uteareal <span class="bw">30%</span></span><span class="track"><span class="fill" style="width:25%"></span></span><span class="sv">25</span></div><div class="sbar"><span class="bl">Standard <span class="bw">20%</span></span><span class="track"><span class="fill" style="width:70%"></span></span><span class="sv">70</span></div><div class="sbar"><span class="bl">Pris <span class="bw">10%</span></span><span class="track"><span class="fill" style="width:66%"></span></span><span class="sv">66</span></div></div><div class="score-notes"><span class="chip good">God margin til budsjett</span><span class="chip bad">13 TG2-avvik</span><span class="chip good">Romslig</span></div><div class="score-summary">Størrelse (100/100) trekker opp, men uteareal (25/100) holder scoren igjen. Et godt alternativ med noen svakheter å veie opp mot.</div></div><div class="vurdering">Moderne og romslig tomannsbolig fra 2011 i attraktivt område ved Korsvoll og inngangen til Nordmarka. Boligen har god planløsning med kjelleretasje som har vært brukt til utleie, men kjellerboenhetens lovlighet som selvstendig boenhet er ikke avklart med kommunen – dette er en vesentlig usikkerhet. Tilstandsrapporten avdekker ingen TG3-funn, men en rekke TG2-avvik knyttet til membraner på alle tre våtrom, manglende lekkasjestopp og komfyrvakt på begge kjøkken, dreneringsforhold og taktekking som har passert halv forventet levetid. Kjøper bør påregne utbedringskostnader på kort til mellomlang sikt.</div><div class="pc"><div class="pros"><h4>Fordeler</h4><ul><li>Relativt ny bolig fra 2011 med moderne konstruksjon og rør-i-rør vannledninger</li><li>Svært god beliggenhet nær marka, skiløyper, Akerselva og kollektivtransport</li><li>Garasje og to ekstra biloppstillingsplasser på eiet tomt på 1 420 m²</li><li>Kjelleretasje med egen inngang og kjøkkenløsning gir utleiepotensial</li><li>Peis, varmepumpe (2021) og balansert ventilasjon</li><li>Solrik hage med terrasse, pent opparbeidet tomt</li><li>Ingen fellesgjeld</li></ul></div><div class="cons"><h4>Ulemper</h4><ul><li>Kjellerboenhet er trolig ikke godkjent som selvstendig boenhet av kommunen – rettslig og praktisk usikkerhet</li><li>Membraner/tettesjikt på alle tre våtrom (bad 2. etg, bad kjeller, vaskerom kjeller) har passert halv forventet levetid uten dokumentasjon</li><li>Mangler lekkasjestopp og komfyrvakt på begge kjøkken – påkrevd etter 2010-regler</li><li>Taktekking (pappshingel) har passert halv forventet levetid; taket ikke inspiserbart fra bakkenivå</li><li>Drenering fra byggeår (2011) uten dokumentasjon, flatt terreng mot grunnmur øker fuktrisiko</li><li>Ventilasjonsanlegg slår seg av under -5 °C og må startes manuelt</li><li>Manglende rekkverk/håndløper på utvendig trapp til kjeller</li><li>Ingen radonmåling utført</li><li>Garasje har fukt på panel og svill mot naboeiendommen</li><li>Kjøkkenet i kjelleren har kun kullfilterventilator – ikke mekanisk avtrekk ut</li><li>Rørskap i gang i kjeller ikke tilgjengelig; rør-i-rør i kjellerbenk ikke tett</li></ul></div></div><div class="tg-block"><div class="tg-h three"><span class="tag">TG3</span><span class="lbl">Vesentlige avvik / strakstiltak</span></div><div class="tg-none">Ingen TG3-avvik registrert.</div></div><div class="tg-block"><div class="tg-h two"><span class="tag">TG2</span><span class="lbl">Avvik som kan kreve tiltak</span></div><div class="tg-item two"><div class="tema"><span>Taktekking</span><span class="kost">100&nbsp;000 kr – 200&nbsp;000 kr</span></div><div class="desc">Pappshingel fra 2011 har passert over halvparten av forventet levetid. Taket er kun inspisert fra bakkenivå – skjulte skader kan ikke utelukkes. Anbefales overvåket og vurdert for utskiftning.</div></div><div class="tg-item two"><div class="tema"><span>Membraner våtrom – 2. etasje bad</span><span class="kost">100&nbsp;000 kr – 200&nbsp;000 kr</span></div><div class="desc">Membran/tettesjikt fra 2011 har passert halv forventet levetid. Ingen dokumentasjon på utførelse. Risiko for lekkasje og fuktskade i tilliggende konstruksjoner.</div></div><div class="tg-item two"><div class="tema"><span>Membraner våtrom – kjeller vaskerom</span><span class="kost">50&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Membran fra 2011 har passert halv forventet levetid. Avvik i fall til sluk (kun 12 mm mot krav 25 mm). Sprekker i støpt gulv. Ingen dokumentasjon.</div></div><div class="tg-item two"><div class="tema"><span>Membraner våtrom – kjeller bad</span><span class="kost">50&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Membran fra 2011 har passert halv forventet levetid. Ingen dokumentasjon på utførelse.</div></div><div class="tg-item two"><div class="tema"><span>Lekkasjesikring bad – innebygget sisterne</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Mangler påvist spalte eller lekkasjesikring fra innebygget sisterne på bad i 2. etasje og kjeller bad. Lekkasje kan gi skjult fuktskade i konstruksjonen.</div></div><div class="tg-item two"><div class="tema"><span>Kjøkken 1. etasje – lekkasjestopp og komfyrvakt</span><span class="kost">10&nbsp;000 kr – 25&nbsp;000 kr</span></div><div class="desc">Mangler lekkasjestopp under benk og komfyrvakt over platetopp. Begge krav gjeldende fra 2010. Brann- og fuktrisiko.</div></div><div class="tg-item two"><div class="tema"><span>Kjøkken kjeller – lekkasjestopp, komfyrvakt og avtrekk</span><span class="kost">20&nbsp;000 kr – 50&nbsp;000 kr</span></div><div class="desc">Mangler lekkasjestopp og komfyrvakt. Har kun kullfilterventilator – ikke mekanisk avtrekk ut fra kokesonen. Alle tre avvik påkrevd etter 2010-forskrift.</div></div><div class="tg-item two"><div class="tema"><span>Drenering og terrengfall</span><span class="kost">100&nbsp;000 kr – 300&nbsp;000 kr</span></div><div class="desc">Drenering fra byggeår (2011) uten dokumentasjon. Tilnærmet flatt terreng mot grunnmur – risiko for vannansamling og fuktinntrengning i kjeller.</div></div><div class="tg-item two"><div class="tema"><span>Ventilasjon</span><span class="kost">10&nbsp;000 kr – 50&nbsp;000 kr</span></div><div class="desc">Balansert ventilasjonsaggregat slår seg av ved under -5 °C og må startes manuelt. Eier opplyser at dette ikke lar seg endre. Bør kontrolleres/serviceres av fagperson.</div></div><div class="tg-item two"><div class="tema"><span>Vannledninger</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Rørskap i gang i kjeller ikke tilgjengelig for inspeksjon. Rør-i-rør i kjellerbenk er ikke tett festet/lukket. Øker risiko for forsinket oppdagelse av lekkasjer.</div></div><div class="tg-item two"><div class="tema"><span>Overflater innvendig</span><span class="kost">20&nbsp;000 kr – 60&nbsp;000 kr</span></div><div class="desc">Noen sprekker i støpte gulv i kjeller. Noe knirk i gulv i 1. og 2. etasje. Bør utbedres for å hindre videre oppsprekking og fuktinntrengning.</div></div><div class="tg-item two"><div class="tema"><span>Etasjeskille – helningsavvik</span><span class="kost">0 kr – 50&nbsp;000 kr</span></div><div class="desc">Målt høydeforskjell mellom 6–15 mm i ulike rom. Kjellerstuen har 15 mm. TG2 gitt pga. standardens krav. Sjelden lønnsomt å utbedre isolert sett.</div></div><div class="tg-item two"><div class="tema"><span>HMS – rekkverk og radon</span><span class="kost">10&nbsp;000 kr – 30&nbsp;000 kr</span></div><div class="desc">Mangler rekkverk på utvendig trapp til kjeller, og håndløper mangler på begge sider av trappen. Ingen radonmåling er utført – dokumentasjon på radonsperre mangler.</div></div></div><div class="estimate"><div class="top"><span class="ttl">Samlet kostnadsestimat for utbedring</span><span class="amt">480&nbsp;000 kr – 1&nbsp;205&nbsp;000 kr</span></div><div class="cmt">Estimatet er basert på takstrapportens egne sjablongintervaller der disse er oppgitt, og ellers grove anslag fra erfaring for sammenlignbare tiltak i Oslo-markedet 2025/2026. Størst usikkerhet knytter seg til drenering (kan variere enormt avhengig av omfang), taktekking (tidspunkt for nødvendig utskiftning ukjent) og våtromsrehabiliteringen (avhenger av om membranene faktisk svikter eller holder lenge til). Helningsavvik er ikke inkludert i lav-estimatet da dette sjelden utbedres isolert. Godkjenning av kjellerboenhet hos kommunen er ikke inkludert da kostnad avhenger av eventuelle påkrevde bygningsmessige tiltak.</div></div></div></div><div class="dcard"><div class="dcard-head" data-toggle="1780601689270-fgia"><span class="chev">›</span><span class="dh-main"><span class="nm">Grefsenkollveien 6B, 0490 Oslo</span><span class="meta">Tomannsbolig (vertikaldelt) · Eiet · 133 m² · 1971</span></span><span class="score-pill" style="color:var(--gold)">46% · Middels</span></div><div class="dcard-body"><div class="scoreblock"><div class="score-main"><div class="score-pct" style="color:var(--gold)">46%</div><div class="score-band" style="color:var(--gold)">Middels</div><div class="score-sub">veiledende, ut fra dine krav</div></div><div class="score-bars"><div class="sbar"><span class="bl">Størrelse <span class="bw">40%</span></span><span class="track"><span class="fill" style="width:77%"></span></span><span class="sv">77</span></div><div class="sbar"><span class="bl">Uteareal <span class="bw">30%</span></span><span class="track"><span class="fill" style="width:25%"></span></span><span class="sv">25</span></div><div class="sbar"><span class="bl">Standard <span class="bw">20%</span></span><span class="track"><span class="fill" style="width:49%"></span></span><span class="sv">49</span></div><div class="sbar"><span class="bl">Pris <span class="bw">10%</span></span><span class="track"><span class="fill" style="width:67%"></span></span><span class="sv">67</span></div></div><div class="score-notes"><span class="chip good">God margin til budsjett</span><span class="chip bad">1 TG3-avvik</span><span class="chip bad">19 TG2-avvik</span><span class="chip good">Romslig</span></div><div class="score-summary">Scoren trekkes ned av 1 TG3-avvik og 19 TG2-avvik. TG3-avvik gir et ekstra trekk utover delscorene.</div></div><div class="vurdering">En gjennomgående oppgradert tomannsbolig fra 1971 med eneboligfølelse, panoramautsikt og attraktiv beliggenhet ved Grefsenkollen. Boligen har fått betydelige investeringer de siste årene – nye bad (2021), nytt kjøkken (2024), ny varmepumpe (2023) og helt ny garasje (2025) – men den høye alderen gjør seg gjeldende i taktekking, vinduer, dører og fuktrisiko i underetasjen. Kjøper må påregne løpende vedlikehold og trolig større utskiftninger på tak og vinduer i ikke altfor fjern fremtid, og bør være særlig oppmerksom på fuktrisikoen i rom under terreng.</div><div class="pc"><div class="pros"><h4>Fordeler</h4><ul><li>Fantastisk panoramautsikt mot Oslofjorden og Holmenkollen fra sørvest-vendt balkong på 18 m²</li><li>Gjennomgående oppgradert: totalrenoverte bad (2021), nytt Epoq-kjøkken (2024), ny varmepumpe (2023)</li><li>Helt ny isolert garasje med hems og EV-ladeklargjøring (2025, ferdigattest foreligger)</li><li>Selveiertomt på 578 m² med pent opparbeidet hage, markterrasse og solrik beliggenhet</li><li>Kort vei til marka, ski, buss og trikk – svært attraktivt naturområde</li><li>Oppgradert elektrisk anlegg med jordfeilautomater, gulvvarme på bad og i soverom</li><li>Automatisk vannstopper installert på kjøkken (2024)</li><li>Drenering av grunnmur fornyet 2015 på tre sider</li></ul></div><div class="cons"><h4>Ulemper</h4><ul><li>Energimerke G – høyt oppvarmingsbehov, kun elektrisk og ved</li><li>Taktekking i metall fra ca. 2003 – nærmer seg utløpt levetid, fuktmerker i undertak registrert</li><li>Vinduer og ytterdører i hovedsak fra byggeåret (1971) – høyt varmetap, utskifting må påregnes</li><li>Underetasje er en risikokonstruksjon for fukt: diffusjonstette plater, forhøyet fuktindikasjon i betonggulv, sprekk i grunnmur</li><li>Kun naturlig ventilasjon (oppdrift) i hoveddelen av boligen – regnes som avvik</li><li>Mangler samsvarserklæring for elektrisk anlegg – utvidet el-kontroll anbefales</li><li>Naboeiendommen (6A) har tinglyst bruksrett til én garasjeplass og adkomstvei – kan ikke fjernes</li><li>Himlingshøyde ca. 2,37 m i stue – under dagens krav på 2,40 m</li><li>Deler av eiendommen i rød og gul støysone for vei</li></ul></div></div><div class="tg-block"><div class="tg-h three"><span class="tag">TG3</span><span class="lbl">Vesentlige avvik / strakstiltak</span></div><div class="tg-item three"><div class="tema"><span>Fallsikring ved garasje</span><span class="kost">10&nbsp;000 kr – 50&nbsp;000 kr</span></div><div class="desc">Høydeforskjell over 0,5 meter ned til gruslagt felt bak garasjen uten fallsikring – personsikkerhetsrisiko. Tiltak: etablere rekkverk/fallsikring.</div></div></div><div class="tg-block"><div class="tg-h two"><span class="tag">TG2</span><span class="lbl">Avvik som kan kreve tiltak</span></div><div class="tg-item two"><div class="tema"><span>Taktekking</span><span class="kost">150&nbsp;000 kr – 300&nbsp;000 kr</span></div><div class="desc">Metalltakplater fra ca. 2003 har nådd en alder der lekkasjerisikoen øker. Fuktmerker registrert i undertak rundt spikre. Lekkasje ved rørgjennomføring utbedret i 2025, men full utskifting må påregnes på sikt.</div></div><div class="tg-item two"><div class="tema"><span>Takkonstruksjon/loft</span><span class="kost">10&nbsp;000 kr – 30&nbsp;000 kr</span></div><div class="desc">Fuktmerker i undertak (se taktekking). Insektnetting i gesimskasser er skadet – gesims ikke helt tett mot insekter.</div></div><div class="tg-item two"><div class="tema"><span>Nedløp og beslag</span><span class="kost">15&nbsp;000 kr – 50&nbsp;000 kr</span></div><div class="desc">Mangler ett feste til snøfanger. Takrenner, nedløp og beslag har passert estimert levetid. Deformasjon i nedløp ved garasje.</div></div><div class="tg-item two"><div class="tema"><span>Vinduer</span><span class="kost">80&nbsp;000 kr – 200&nbsp;000 kr</span></div><div class="desc">Vinduer fra 1971 – passert halvparten av forventet levetid, økt varmetap. Punktert isolerglass registrert på kjøkken. Utilfredsstillende yttertetting rundt kjellervindu (2021).</div></div><div class="tg-item two"><div class="tema"><span>Ytterdører</span><span class="kost">30&nbsp;000 kr – 80&nbsp;000 kr</span></div><div class="desc">Ytterdører fra byggeåret – passert halvparten av levetid, høyt varmetap. En dør tar i karmen.</div></div><div class="tg-item two"><div class="tema"><span>Balkong</span><span class="kost">30&nbsp;000 kr – 80&nbsp;000 kr</span></div><div class="desc">Rekkverk 0,90 m (krav 1,0 m, men lovlig etter byggetidsregler). Vridde håndløpere, sprekker i tre, utilfredsstillende vannavledning, takrenne ikke fagmessig montert, utettheter i beslag ved dør, membran passert halvparten av levetid.</div></div><div class="tg-item two"><div class="tema"><span>Rom under terreng (fukt)</span><span class="kost">50&nbsp;000 kr – 200&nbsp;000 kr</span></div><div class="desc">Risikokonstruksjon: diffusjonstette membranplater på innsiden av grunnmur, forhøyet fuktindikasjon i betonggulv, diffusjonsperre/plast bak overflater begrenser utlufting. Organiske materialer på overflater.</div></div><div class="tg-item two"><div class="tema"><span>Drenering</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Glipper/åpninger mellom drensplast og grunnmur rundt ett kjellervindu – vann kan trenge inn og gi innvendig fuktproblematikk.</div></div><div class="tg-item two"><div class="tema"><span>Grunnmur</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Vertikal sprekk på gavlside tettet med puss – bør overvåkes for utvikling.</div></div><div class="tg-item two"><div class="tema"><span>Innvendig trapp</span><span class="kost">10&nbsp;000 kr – 30&nbsp;000 kr</span></div><div class="desc">Rekkverkshøyde 0,87 m (under krav på 0,9 m). Åpninger større enn 0,1 m – risiko for små barn. Knirk i trapp.</div></div><div class="tg-item two"><div class="tema"><span>Innvendige dører</span><span class="kost">2&nbsp;000 kr – 8&nbsp;000 kr</span></div><div class="desc">Enkelte innvendige dører tar i karmen – økt slitasje, justering anbefales.</div></div><div class="tg-item two"><div class="tema"><span>Avløpsrør</span><span class="kost">20&nbsp;000 kr – 60&nbsp;000 kr</span></div><div class="desc">Soilrør og avløpsrør tilknyttet vaskeromssluket er eldre og har passert halvparten av forventet levetid – økt lekkasjerisiko.</div></div><div class="tg-item two"><div class="tema"><span>Ventilasjon</span><span class="kost">30&nbsp;000 kr – 80&nbsp;000 kr</span></div><div class="desc">Naturlig oppdriftsventilasjon i hoveddelen av boligen – svakere og mer ujevn luftutskifting enn mekanisk anlegg. Regnes som avvik etter NS 3600.</div></div><div class="tg-item two"><div class="tema"><span>Varmepumpe (service)</span><span class="kost">2&nbsp;000 kr – 5&nbsp;000 kr</span></div><div class="desc">Varmepumpe fra 2023 – ingen dokumentert service utført. Oppfølging anbefales.</div></div><div class="tg-item two"><div class="tema"><span>Elektrisk anlegg</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Mangler samsvarserklæring for elektriske arbeider utført etter 1999. Utvidet el-kontroll av el-takstmann anbefales.</div></div><div class="tg-item two"><div class="tema"><span>Bad 1. etasje – overflater</span><span class="kost">5&nbsp;000 kr – 15&nbsp;000 kr</span></div><div class="desc">Dør plassert innenfor våt sone – mer utsatt for vannsøl og skade over tid.</div></div><div class="tg-item two"><div class="tema"><span>Bad underetasje – ventilasjon</span><span class="kost">1&nbsp;000 kr – 5&nbsp;000 kr</span></div><div class="desc">Mangler luftespalte under dør eller annen tilluftåpning – manglende tilluft kan gi fuktopphopning.</div></div><div class="tg-item two"><div class="tema"><span>Vaskerom – sluk og membran</span><span class="kost">20&nbsp;000 kr – 60&nbsp;000 kr</span></div><div class="desc">Sluk av ukjent type og eldre vinylmembran har passert halvparten av forventet levetid. Full oppgradering med nytt tettesjikt må påregnes på sikt.</div></div><div class="tg-item two"><div class="tema"><span>Vaskerom – ventilasjon</span><span class="kost">2&nbsp;000 kr – 8&nbsp;000 kr</span></div><div class="desc">Naturlig oppdriftsventilasjon og manglende luftespalte under dør – fuktopphopningsrisiko.</div></div></div><div class="estimate"><div class="top"><span class="ttl">Samlet kostnadsestimat for utbedring</span><span class="amt">482&nbsp;000 kr – 1&nbsp;311&nbsp;000 kr</span></div><div class="cmt">Estimatet summerer kostnad_lav og kostnad_hoy for alle TG2- og TG3-funn. For TG3 (fallsikring garasje) er takstrapportens egne tall brukt (10 000–50 000 kr). For TG2-poster uten rapportestimat er det benyttet grove bransjeanslag basert på tiltakenes omfang og normale håndverkspriser i Oslo-området. De største usikkerhetene knytter seg til taktekking (kan bli vesentlig dyrere ved full utskifting inkl. undertak), fuktutbedring i underetasje (omfang ukjent uten destruktive undersøkelser) og vindusutskifting (avhengig av antall og kvalitetsvalg). Estimatet er ikke et pristilbud og bør kvalitetssikres med fagfolk før budgivning.</div></div></div></div><div class="dcard"><div class="dcard-head" data-toggle="1780601794800-f436"><span class="chev">›</span><span class="dh-main"><span class="nm">Rundhaugveien 29, 0495 Oslo</span><span class="meta">Enebolig - Frittliggende · Eierseksjon · 97 m² · 1913</span></span><span class="score-pill" style="color:var(--clay)">17% · Svakt</span></div><div class="dcard-body"><div class="scoreblock"><div class="score-main"><div class="score-pct" style="color:var(--clay)">17%</div><div class="score-band" style="color:var(--clay)">Svakt</div><div class="score-sub">veiledende, ut fra dine krav</div></div><div class="score-bars"><div class="sbar"><span class="bl">Størrelse <span class="bw">40%</span></span><span class="track"><span class="fill" style="width:53%"></span></span><span class="sv">53</span></div><div class="sbar"><span class="bl">Uteareal <span class="bw">30%</span></span><span class="track"><span class="fill" style="width:0%"></span></span><span class="sv">0</span></div><div class="sbar"><span class="bl">Standard <span class="bw">20%</span></span><span class="track"><span class="fill" style="width:33%"></span></span><span class="sv">33</span></div><div class="sbar"><span class="bl">Pris <span class="bw">10%</span></span><span class="track"><span class="fill" style="width:73%"></span></span><span class="sv">73</span></div></div><div class="score-notes"><span class="chip good">God margin til budsjett</span><span class="chip bad">2 TG3-avvik</span><span class="chip bad">11 TG2-avvik</span><span class="chip bad">Under ønsket størrelse</span></div><div class="score-summary">Scoren er lav, primært på grunn av: 2 TG3-avvik og 11 TG2-avvik og Under ønsket størrelse. TG3-avvik veier tungt og kompenseres ikke av styrker på andre kriterier.</div></div><div class="vurdering">Sjarmerende enebolig fra 1913 på toppen av Kjelsås med fantastisk vestvendt utsikt og umiddelbar nærhet til marka. Boligen ble betydelig oppgradert i 2017/2018 og har fine bad, moderne kjøkken og nye vinduer, men er preget av sin høye alder med et alvorlig fuktproblem ved pipe/tak (TG3) og en rekke TG2-forhold knyttet til drenering, avløpsrør, undertak og fasade. Kjøper må påregne utbedringskostnader og bør innhente grundigere takstvurdering av taket når snøen er borte. Det er også uavklarte lovlighetsforhold knyttet til terrassedør, trapp og deler av kjøkkenet.</div><div class="pc"><div class="pros"><h4>Fordeler</h4><ul><li>Unik beliggenhet i skogkanten med direkte tilgang til marka</li><li>Flott vestvendt utsikt mot bl.a. Maridalsvannet og Holmenkollen</li><li>Tre soverom samlet i samme etasje – familievennlig planløsning</li><li>To oppgraderte bad (2018) med gulvvarme</li><li>Moderne kjøkken fra 2018 med integrerte hvitevarer</li><li>Nye vinduer og terrassedør (2023) samt ny varmepumpe i 2. etasje (2025)</li><li>Store solrike terrasser (totalt 42 kvm) og vestvendt hage</li><li>Pris innhentet på pipebeslagutbedring (ca. 55 700 kr) – selger har tatt grep</li><li>Ingen felleskostnader i sameiet (3 eneboliger)</li></ul></div><div class="cons"><h4>Ulemper</h4><ul><li>TG3 på tak/loft: fuktskader ved pipe med kritisk fuktnivå (81,5 vektprosent) og utilstrekkelig ventilasjon av takkonstruksjonen – strakstiltak nødvendig</li><li>Taket er ikke fysisk inspisert (snø/is), full tilstandsvurdering mangler</li><li>Gammel drenering uten utvendig fuktsperre og manglende bortledning av takvann fra grunnmur</li><li>Avløpsrør av støpejern med usikker fremtidig funksjon; varmtvannsbereder fra 2001 nærmer seg slutten av levetid</li><li>Ingen felleskostnader, men kjøper bærer all vedlikeholdsrisiko alene</li><li>Uavklarte lovlighetsforhold: terrassedør/trapp og del av kjøkken er ikke søkt/godkjent</li><li>Mangler samsvarserklæring for deler av elektrisk anlegg – utvidet el-kontroll anbefalt</li><li>Energimerke G – høyt energiforbruk for boligtypen</li><li>Kjeller med utilstrekkelig ventilasjon og lav takhøyde (ca. 180 cm) – ikke måleverdig areal</li></ul></div></div><div class="tg-block"><div class="tg-h three"><span class="tag">TG3</span><span class="lbl">Vesentlige avvik / strakstiltak</span></div><div class="tg-item three"><div class="tema"><span>Loft/tak – fuktskader ved pipe</span><span class="kost">55&nbsp;700 kr – 55&nbsp;700 kr</span></div><div class="desc">Fuktinnhold i taktro/undertak ved pipe målt til 81,5 vektprosent (kritisk). Feil pipebeslag vurderes som hovedårsak. Risiko for sopp og råteskader. Tilbud på utbedring innhentet: ca. 55 700 kr inkl. mva.</div></div><div class="tg-item three"><div class="tema"><span>Yttertak – takkonstruksjon og tekking</span><span class="kost">150&nbsp;000 kr – 400&nbsp;000 kr</span></div><div class="desc">Takkonstruksjonen er ikke tilstrekkelig luftet/ventilert. Taktekkingen har trolig høy alder med punktvise skader, svartsopp, saltutslag og lekkasje nær skorstein. Taket ikke fysisk inspisert. Ytterligere undersøkelser og sannsynlig utskifting må påregnes.</div></div></div><div class="tg-block"><div class="tg-h two"><span class="tag">TG2</span><span class="lbl">Avvik som kan kreve tiltak</span></div><div class="tg-item two"><div class="tema"><span>Bad 2. etasje – drenering sisterne</span><span class="kost">3&nbsp;000 kr – 10&nbsp;000 kr</span></div><div class="desc">Drenering fra innebygget toalettsisterne er ikke registrert. Kan ikke verifiseres om lekkasjevann vil bli synliggjort. Lokal utbedring nødvendig.</div></div><div class="tg-item two"><div class="tema"><span>Avløpsrør støpejern</span><span class="kost">50&nbsp;000 kr – 150&nbsp;000 kr</span></div><div class="desc">Innvendige avløpsrør av støpejern har høy alder med usikker fremtidig funksjon. Risiko for funksjonssvikt. Overvåking og eventuell rørfornying/utskifting.</div></div><div class="tg-item two"><div class="tema"><span>Varmtvannsbereder</span><span class="kost">10&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Bereder fra 2001 (over 25 år gammel) med usikker fremtidig funksjon. Bør skiftes ut ved funksjonssvikt eller som forebyggende tiltak.</div></div><div class="tg-item two"><div class="tema"><span>Kjeller – ventilasjon</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Ventilasjonen i kjeller vurderes som utilstrekkelig. Kan medføre økt fuktpåkjenning og redusert luftkvalitet.</div></div><div class="tg-item two"><div class="tema"><span>Loft – ventilasjon og inspeksjonsmulighet</span><span class="kost">10&nbsp;000 kr – 40&nbsp;000 kr</span></div><div class="desc">Utilstrekkelig ventilasjon av kaldloft grunnet fuktnivåer. Deler av loftet lot seg ikke undersøke. Spor etter gnagere observert.</div></div><div class="tg-item two"><div class="tema"><span>Etasjeskiller kjeller – skjevheter</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Høydeforskjeller opptil 30 mm i kjeller. Vesentlige skjevheter avdekket. Anses trolig ikke som strukturelle skader.</div></div><div class="tg-item two"><div class="tema"><span>Yttervegger – overflatebehandling og lufting</span><span class="kost">30&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Stedvis slitasje på overflatebehandling. Mangler luftespalte bak ytterkledning, noe som øker risikoen for fuktskader over tid.</div></div><div class="tg-item two"><div class="tema"><span>Vinduer kjeller og hovedsoverom</span><span class="kost">10&nbsp;000 kr – 40&nbsp;000 kr</span></div><div class="desc">Kjellervinduene har begynnende slitasje og usikker fremtidig funksjon. Vindu på hovedsoverom er tregt og vanskelig å lukke.</div></div><div class="tg-item two"><div class="tema"><span>Yttertak – undertak og snøfangere</span><span class="kost">20&nbsp;000 kr – 80&nbsp;000 kr</span></div><div class="desc">Undertak med sløyfer og lekter har høy alder og usikker fremtidig funksjon. Snøfangerutstyr mangler, noe som kan påvirke sikkerheten.</div></div><div class="tg-item two"><div class="tema"><span>Drenering</span><span class="kost">80&nbsp;000 kr – 200&nbsp;000 kr</span></div><div class="desc">Drenering med ukjent/høy alder og usikker fremtidig funksjon. Grunnmuren mangler utvendig fuktsperre. Takvann stedvis ikke tilstrekkelig ledet bort fra grunnmur.</div></div><div class="tg-item two"><div class="tema"><span>Stikkledninger – vann og avløp utvendig</span><span class="kost">50&nbsp;000 kr – 150&nbsp;000 kr</span></div><div class="desc">Ukjent alder på utvendige vann- og avløpsledninger. Usikker fremtidig funksjon. Ytterligere kartlegging anbefalt.</div></div></div><div class="estimate"><div class="top"><span class="ttl">Samlet kostnadsestimat for utbedring</span><span class="amt">428&nbsp;700 kr – 1&nbsp;235&nbsp;000 kr</span></div><div class="cmt">TG3-estimatet for loft/pipe bygger på innhentet tilbud fra blikkenslager (55 700 kr). TG3 for taktekkingen/takkonstruksjonen er et grovt anslag da taket ikke er fysisk inspisert – potensiell full omlegging av mansardtak kan bli vesentlig dyrere. TG2-estimater er grove anslag basert på erfaringstall for tilsvarende boliger fra 1913; drenering og stikkledninger er de mest usikre postene da omfanget ikke er kartlagt. Samlet intervall er beheftet med stor usikkerhet og bør suppleres med faglige befaringer særlig på tak, drenering og rør.</div></div></div></div><div class="dcard"><div class="dcard-head" data-toggle="1780601907061-b26j"><span class="chev">›</span><span class="dh-main"><span class="nm">Lofthusveien 51 B, 0588 Oslo</span><span class="meta">Rekkehus · Eierseksjon · 165 m² · 2003</span></span><span class="score-pill" style="color:var(--gold)">63% · Godt kjøp</span></div><div class="dcard-body"><div class="scoreblock"><div class="score-main"><div class="score-pct" style="color:var(--gold)">63%</div><div class="score-band" style="color:var(--gold)">Godt kjøp</div><div class="score-sub">veiledende, ut fra dine krav</div></div><div class="score-bars"><div class="sbar"><span class="bl">Størrelse <span class="bw">40%</span></span><span class="track"><span class="fill" style="width:100%"></span></span><span class="sv">100</span></div><div class="sbar"><span class="bl">Uteareal <span class="bw">30%</span></span><span class="track"><span class="fill" style="width:0%"></span></span><span class="sv">0</span></div><div class="sbar"><span class="bl">Standard <span class="bw">20%</span></span><span class="track"><span class="fill" style="width:78%"></span></span><span class="sv">78</span></div><div class="sbar"><span class="bl">Pris <span class="bw">10%</span></span><span class="track"><span class="fill" style="width:70%"></span></span><span class="sv">70</span></div></div><div class="score-notes"><span class="chip good">God margin til budsjett</span><span class="chip good">Romslig</span></div><div class="score-summary">Størrelse (100/100) trekker opp, men uteareal (0/100) holder scoren igjen. Et godt alternativ med noen svakheter å veie opp mot.</div></div><div class="vurdering">Velholdt og gjennomgående oppgradert rekkehus på Årvoll med omfattende renovering av 1. etasje i 2024, inkludert nytt kjøkken, parkett og ventilasjon. Boligen fremstår med god standard og lite slitasje, men begge bad er fra byggeår 2003 med membraner som har passert halv forventet levetid, og det er registrert fuktmerker i undertaket. Selger dekker sameiets planlagte tak- og fasadearbeid (ca. 116 000 kr per husstand) før overtakelse, noe som reduserer risikoen noe. Kjøper bør merke seg at deler av soverom 3 (tidligere bod) og kjelleren ikke er godkjent for varig opphold, og at det er registrert sjeggkre i boligen som er behandlet.</div><div class="pc"><div class="pros"><h4>Fordeler</h4><ul><li>Gjennomgående renovert 1. etasje i 2024 med nytt IKEA-kjøkken med Miele-hvitevarer, helstavs eikeparkett og varmefolie</li><li>Romslig 165 m² BRA fordelt på 3 plan pluss kjeller, med 45 m² terrasse/balkong</li><li>Balansert ventilasjon med varmegjenvinning montert 2018</li><li>To biloppstillingsplasser med elbil-lading</li><li>Svært barnevennlig og populært nabolag på Årvoll med nærhet til marka, skoler og kollektivtransport</li><li>Ingen fellesgjeld og andel fellesformue på 62 000 kr</li><li>Radonverdier godt under tiltaksgrensen (55–58 Bq/m³)</li><li>Selger dekker sameiets andel av forestående tak- og fasadearbeid (ca. 116 000 kr)</li></ul></div><div class="cons"><h4>Ulemper</h4><ul><li>Begge bad er fra byggeår 2003 – membraner og tettesjikt har passert halv forventet levetid og vil trolig kreve rehabilitering</li><li>Fuktmerker observert i undertaket, planlagt utbedring men ikke utført på befaringstidspunktet</li><li>Deler av soverom 3 (tidligere bod) er ikke godkjent for varig opphold – risiko for pålegg fra kommunen</li><li>Kjelleren er ikke godkjent for varig opphold</li><li>Sjeggkre-angrep behandlet av Rentokil – effekt av behandling er tidsbegrenset</li><li>Ytterdører over 20 år gamle og nærmer seg utskiftningsbehov</li><li>Rør-i-rør-kurser er ikke merket i fordelerskapet</li><li>Ingen energimerke-karakter oppgitt (energiattest utstedt men karakter fremgår ikke av dokumentene)</li><li>Planlagte byggeprosjekter i nærområdet (8 nye eneboliger i Årrundveien 8 og 10)</li></ul></div></div><div class="tg-block"><div class="tg-h three"><span class="tag">TG3</span><span class="lbl">Vesentlige avvik / strakstiltak</span></div><div class="tg-none">Ingen TG3-avvik registrert.</div></div><div class="tg-block"><div class="tg-h two"><span class="tag">TG2</span><span class="lbl">Avvik som kan kreve tiltak</span></div><div class="tg-item two"><div class="tema"><span>Bad 1. etasje – gulvfall</span><span class="kost">20&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Høydeforskjell på kun 14 mm fra slukrist til gulv ved dør – kravet er minimum 25 mm. Redusert evne til å lede vann mot sluk, økt risiko for vannansamling.</div></div><div class="tg-item two"><div class="tema"><span>Bad 1. etasje – membran og tettesjikt</span><span class="kost">100&nbsp;000 kr – 200&nbsp;000 kr</span></div><div class="desc">Mer enn halvparten av forventet brukstid er passert på membranløsningen. Sluk er plassert under dusjkabinett og ikke tilgjengelig for inspeksjon eller rengjøring.</div></div><div class="tg-item two"><div class="tema"><span>Bad 2. etasje – membran og tettesjikt</span><span class="kost">100&nbsp;000 kr – 200&nbsp;000 kr</span></div><div class="desc">Membran og tettesjikt er fra byggeår 2003, over 15 år gammelt og har passert halv forventet levetid. TG2 satt på grunnlag av alder.</div></div><div class="tg-item two"><div class="tema"><span>Takkonstruksjon/loft</span><span class="kost">20&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Fuktmerker observert på undertaket. Eier opplyser at utbedring er planlagt sommeren 2026. Fuktsøk viste ingen utslag ved befaring.</div></div><div class="tg-item two"><div class="tema"><span>Ytterdører</span><span class="kost">20&nbsp;000 kr – 100&nbsp;000 kr</span></div><div class="desc">Ytterdørene er over 20 år gamle og har brukt opp halvparten av forventet levetid på 20–40 år. Foreløpig ikke behov for utskifting, men tidspunktet nærmer seg.</div></div><div class="tg-item two"><div class="tema"><span>Vannledninger – merking</span><span class="kost">0 kr – 20&nbsp;000 kr</span></div><div class="desc">Rørkursene på rør-i-rør-systemet er ikke merket i fordelerskapet. Bør merkes for å muliggjøre enkel avstenging ved lekkasje.</div></div></div><div class="estimate"><div class="top"><span class="ttl">Samlet kostnadsestimat for utbedring</span><span class="amt">260&nbsp;000 kr – 720&nbsp;000 kr</span></div><div class="cmt">Estimatet bygger på tilstandsrapportens sjablongintervaller. Badene utgjør den dominerende usikkerheten – full rehabilitering av begge bad (membran, fliser, sluk) er kostnadsført til 100 000–200 000 kr per bad, noe som er grove anslag; faktisk kostnad avhenger av omfang, materialvalg og om tilliggende konstruksjoner viser fuktskader ved åpning. Tak- og fasadearbeid dekkes av selger og er ikke inkludert. Merking av rør-i-rør er antatt å koste under 20 000 kr. Ytterdører kan utsettes noen år. Samlet intervall 260 000–720 000 kr må anses som usikkert og bør kvalitetssikres med håndverkertilbud før budgivning.</div></div></div></div><div class="dcard"><div class="dcard-head" data-toggle="1780602006305-q31o"><span class="chev">›</span><span class="dh-main"><span class="nm">Radioveien 13J, 0884 Oslo</span><span class="meta">Rekkehus · Eierseksjon · 125 m² · 2015</span></span><span class="score-pill" style="color:var(--gold)">68% · Godt kjøp</span></div><div class="dcard-body"><div class="scoreblock"><div class="score-main"><div class="score-pct" style="color:var(--gold)">68%</div><div class="score-band" style="color:var(--gold)">Godt kjøp</div><div class="score-sub">veiledende, ut fra dine krav</div></div><div class="score-bars"><div class="sbar"><span class="bl">Størrelse <span class="bw">40%</span></span><span class="track"><span class="fill" style="width:71%"></span></span><span class="sv">71</span></div><div class="sbar"><span class="bl">Uteareal <span class="bw">30%</span></span><span class="track"><span class="fill" style="width:100%"></span></span><span class="sv">100</span></div><div class="sbar"><span class="bl">Standard <span class="bw">20%</span></span><span class="track"><span class="fill" style="width:59%"></span></span><span class="sv">59</span></div><div class="sbar"><span class="bl">Pris <span class="bw">10%</span></span><span class="track"><span class="fill" style="width:69%"></span></span><span class="sv">69</span></div></div><div class="score-notes"><span class="chip good">God margin til budsjett</span><span class="chip bad">1 TG3-avvik</span><span class="chip bad">10 TG2-avvik</span></div><div class="score-summary">Uteareal (100/100) trekker opp, men standard (59/100) holder scoren igjen. TG3-avvik gir et ekstra trekk på toppen av vektingen.</div></div><div class="vurdering">Moderne og godt vedlikeholdt rekkehus fra 2015 med attraktiv beliggenhet nær marka og Frysja. Boligen fremstår med høy standard og gjennomtenkte løsninger, men har én TG3 på vaskerom i kjeller (manglende vanntett sjikt på vegg) samt flere TG2-funn primært knyttet til bad og kjeller. Kjellerstuen er ikke godkjent for varig opphold og medfører en uavklart juridisk risiko. Prisnivået er høyt, og kjøper bør særlig merke seg de uavklarte forholdene rundt vaskerom, kjellerstue og manglende radonmåling.</div><div class="pc"><div class="pros"><h4>Fordeler</h4><ul><li>Moderne byggeår (2015) med god teknisk standard og balansert ventilasjon</li><li>Tre etasjer pluss romslig takterrasse med sol til ca. 21:30 om sommeren</li><li>To parkeringsplasser inkl. carport med elbillader</li><li>Eksklusiv motorisert pergola fra Brustor på markterrasse</li><li>Svært god beliggenhet – marka, badeplass og kollektivtilbud rett utenfor døren</li><li>Gulvvarme i nær sagt alle rom, peisovn i stue, Miele-hvitevarer på kjøkken</li><li>Norgespris på strøm frem til 31.12.2026</li><li>Pent og sosialt sameie med kun 10 enheter</li></ul></div><div class="cons"><h4>Ulemper</h4><ul><li>TG3 på vaskerom kjeller – manglende vanntett sjikt på vegg i våtsone</li><li>Kjellerstue ikke godkjent for varig opphold – ulovlig bruksendring som kan kreve tilbakeføring</li><li>Ingen radonmåling er utført</li><li>Mekanisk styrt takterrassedør og utvendig styring ikke funksjonell – krever fagperson</li><li>Manglende overløp på flatt tak øker risiko for vannskade ved tett sluk</li><li>Flere TGIU-punkter (takkonstruksjon, lufting ytterkledning, sluk/fallforhold flatt tak) gir usikkerhet</li><li>Fellesutgifter varslet økt med 15 % fra juli 2026 (til kr 3 770/mnd)</li><li>Planlagt regulering av Kjelsåsveien 161 til bolig kan påvirke nærområdet</li></ul></div></div><div class="tg-block"><div class="tg-h three"><span class="tag">TG3</span><span class="lbl">Vesentlige avvik / strakstiltak</span></div><div class="tg-item three"><div class="tema"><span>Vaskerom kjeller – vanntett sjikt</span><span class="kost">10&nbsp;000 kr – 50&nbsp;000 kr</span></div><div class="desc">Ikke benyttet vanntett sjikt på veggflater i våtsonen på vaskerommet i kjeller. Høy risiko for skjulte fuktskader. Strakstiltak nødvendig – videre undersøkelser og utbedring.</div></div></div><div class="tg-block"><div class="tg-h two"><span class="tag">TG2</span><span class="lbl">Avvik som kan kreve tiltak</span></div><div class="tg-item two"><div class="tema"><span>Bad 2. etasje – overflater vegger</span><span class="kost">3&nbsp;000 kr – 15&nbsp;000 kr</span></div><div class="desc">Hull etter tidligere innfestinger i dusjsone, tettet med tettemasse. Kan ikke verifiseres visuelt om løsningen gir tilstrekkelig fuktsikkerhet. Anbefalt overvåking og eventuell lokal utbedring.</div></div><div class="tg-item two"><div class="tema"><span>Bad kjeller – lekkasjesikkerhet</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Fallforhold utenfor sluksonen er utilstrekkelig og det er ikke påvist tilstrekkelig oppkant på tettesjikt ved dørterskel. Risiko for at vann renner ut i tilstøtende rom ved lekkasje. Lokal utbedring anbefalt.</div></div><div class="tg-item two"><div class="tema"><span>Bad kjeller – sluktilkomst og tettesjikt</span><span class="kost">2&nbsp;000 kr – 10&nbsp;000 kr</span></div><div class="desc">Badekar hindrer fullgod undersøkelse av sluk og tettedetaljer. Tilstand og lekkasjesikkerhet er ukjent. Videre undersøkelser nødvendig.</div></div><div class="tg-item two"><div class="tema"><span>Bad kjeller – innredning</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Innredningen har mindre skader (svelleskader). Tiltak kan bli nødvendig for å opprettholde forventet funksjon og standard.</div></div><div class="tg-item two"><div class="tema"><span>Vaskerom kjeller – innredning</span><span class="kost">3&nbsp;000 kr – 10&nbsp;000 kr</span></div><div class="desc">Innredningen har mindre skader (svelleskader). Tiltak kan bli nødvendig.</div></div><div class="tg-item two"><div class="tema"><span>Rom under terreng – kondens-/fuktrisiko</span><span class="kost">0 kr – 30&nbsp;000 kr</span></div><div class="desc">Innvendig etterisolering uten at grunnmur er isolert på utsiden. Forbundet med kondens- og fuktrisiko. Begrenset undersøkelsesgrunnlag – overvåking anbefalt.</div></div><div class="tg-item two"><div class="tema"><span>Vinduer og ytterdører – kjellerstuevindu</span><span class="kost">3&nbsp;000 kr – 10&nbsp;000 kr</span></div><div class="desc">Vindu i rom benyttet som kjellerstue har mangelfull åpnings-/lukkefunksjon og løs vrider. I tillegg liten klaring mellom listverk og vannbord, økt fuktrisiko. Lokal reparasjon anbefalt.</div></div><div class="tg-item two"><div class="tema"><span>Yttertak – manglende overløp</span><span class="kost">3&nbsp;000 kr – 10&nbsp;000 kr</span></div><div class="desc">Ikke registrert overløp (dreneringshull) på det flate taket. Oppdemming av vann ved tett sluk kan øke risiko for lekkasjer. Ettermontering av overløpsdrenering anbefalt.</div></div><div class="tg-item two"><div class="tema"><span>Takterrasse – terrassebord</span><span class="kost">5&nbsp;000 kr – 25&nbsp;000 kr</span></div><div class="desc">Terrassebordene på takterrassen viser tegn til slitasje. Svekket beskyttelse kan forkorte levetiden og øke risiko for fuktskader. Forebyggende vedlikehold anbefalt.</div></div><div class="tg-item two"><div class="tema"><span>Grunnmur/fundament</span><span class="kost">5&nbsp;000 kr – 20&nbsp;000 kr</span></div><div class="desc">Tegn til riss og sprekkdannelser stedvis i overflaten til grunnmuren ved ytterdør og vindu mot kjellerstue. Eksakt årsak ukjent – kan indikere setninger eller spenninger. Overvåking og eventuell lokal reparasjon anbefalt.</div></div></div><div class="estimate"><div class="top"><span class="ttl">Samlet kostnadsestimat for utbedring</span><span class="amt">44&nbsp;000 kr – 220&nbsp;000 kr</span></div><div class="cmt">TG3-kostnaden for vaskerom er hentet direkte fra tilstandsrapportens sjablongmessige anslag (kr 10 000–50 000). TG2-kostnadene er grove anslag da rapporten ikke oppgir spesifikke beløp for disse postene. Usikkerheten er særlig stor for rom under terreng (kondens-/fuktrisiko) og takterrassebord, da omfang ikke er kartlagt. Estimatet dekker ikke eventuelle kostnader ved søknad om godkjenning av kjellerstue, utvidet el-kontroll, radonmåling/-tiltak eller den mekaniske takterrassedøren.</div></div></div></div></div></div>
+
+  <div class="backup">
+    <div class="backup-txt"><b>Sikkerhetskopi</b><span>Lagre boligene og kravene dine til en fil du beholder selv — og hent dem inn igjen når som helst.</span></div>
+    <div class="backup-actions">
+      <button class="btn-ghost btn-sm" id="exportBtn">Last ned som fil</button>
+      <button class="btn-ghost btn-sm" id="importBtn">Hent inn fra fil</button>
+      <input type="file" id="importInput" accept="application/json,.json" style="display:none">
+    </div>
+  </div>
+
+  <footer>
+    <div>Kjøpsscoren er en veiledende, regelbasert vurdering ut fra kravene og vektingen du oppgir — ikke en faktisk sannsynlighet eller en garanti. Tolkning, fordeler/ulemper og TG-avvik er hentet ut og oppsummert automatisk fra dokumentene du laster opp, og kan inneholde feil eller utelatelser — les alltid den fullstendige salgsoppgaven og tilstandsrapporten selv. Kostnadsestimatene bygger på takstrapportens egne anslag der de finnes, ellers grove overslag. Dette er verken bygg-, takst- eller finansiell rådgivning.</div>
+    <button class="btn-ghost btn-sm clear" id="clearAll">Tøm alle boliger</button>
+  </footer>
+</div>
+
+<div id="jsonModal" class="modal">
+  <div class="modal-box">
+    <h3>Kopier sikkerhetskopien</h3>
+    <p>Nedlasting ble blokkert her. Marker alt, kopier teksten og lim den inn i en fil du lagrer (f.eks. <code>husjakt.json</code>).</p>
+    <textarea id="jsonText" readonly=""></textarea>
+    <div class="modal-actions">
+      <button class="btn-ghost btn-sm" id="copyJson">Kopier</button>
+      <button class="btn-primary btn-sm" id="closeJson">Lukk</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KR = new Intl.NumberFormat('nb-NO',{maximumFractionDigits:0});
+const fmtKr = n => (n==null||isNaN(n))?null:KR.format(Math.round(n))+' kr';
+const fmtNum = (n,suf='') => (n==null||isNaN(n))?null:KR.format(n)+suf;
+
+// ---- Field definitions for the manual form ----
+const FIELDS = [
+  {key:'adresse',     label:'Adresse / navn',         type:'text'},
+  {key:'boligtype',   label:'Boligtype',              type:'text'},
+  {key:'eierform',    label:'Eierform',               type:'text'},
+  {key:'prisantydning',label:'Prisantydning',         type:'num', suf:'kr'},
+  {key:'omkostninger',label:'Omkostninger',           type:'num', suf:'kr'},
+  {key:'fellesgjeld', label:'Fellesgjeld',            type:'num', suf:'kr'},
+  {key:'felleskostnader',label:'Felleskostnader / mnd',type:'num', suf:'kr'},
+  {key:'bruksareal',  label:'Bruksareal (BRA-i/P-rom)',type:'num', suf:'m²'},
+  {key:'byggeaar',    label:'Byggeår',                type:'num'},
+  {key:'soverom',     label:'Soverom',                type:'num'},
+  {key:'etasje',      label:'Etasje',                 type:'text'},
+  {key:'energimerke', label:'Energimerke',            type:'text'},
+  {key:'uteareal', label:'Uteareal (1–5, din vurdering)', type:'num'},
+];
+
+let boliger = [];
+let editingId = null;
+let expanded = new Set();
+const ANALYSIS_KEYS = ['vurdering','fordeler','ulemper','tg2','tg3','samlet_estimat','estimat_kommentar'];
+let pendingAnalysis = null;
+// Defaults reflect the user's stated priorities: size > location > condition > price,
+// strict budget cap, zero tolerance for TG3. Weighting is derived from this ranking.
+let krav = { budsjett:null, streng:1, minBra:null, minSov:null, tg3tol:'avoid',
+             order:['size','uteareal','cond','price'] };
+const CRIT = [
+  {key:'size', label:'Størrelse og planløsning'},
+  {key:'uteareal', label:'Uteareal'},
+  {key:'cond', label:'Standard og tilstand'},
+  {key:'price',label:'Pris og økonomi'},
+];
+let dragIdx=null;
+function ensureOrder(){
+  const keys=CRIT.map(c=>c.key);
+  if(Array.isArray(krav.order)) krav.order=krav.order.map(k=>k==='loc'?'uteareal':k);
+  if(!Array.isArray(krav.order) || keys.some(k=>!krav.order.includes(k)) || krav.order.length!==keys.length){
+    const legacy={size:krav.wSize, loc:krav.wLoc, cond:krav.wCond, price:krav.wPrice};
+    if(keys.every(k=>typeof legacy[k]==='number')) krav.order=keys.slice().sort((a,b)=>legacy[b]-legacy[a]);
+    else krav.order=keys.slice();
+  }
+  delete krav.wSize; delete krav.wLoc; delete krav.wCond; delete krav.wPrice;
+}
+// Rank 1 gets the highest raw weight; normalised so the percentages always sum to 100.
+function weightsFromOrder(){
+  ensureOrder();
+  const n=krav.order.length, raw={}; let sum=0;
+  krav.order.forEach((k,i)=>{ raw[k]=n-i; sum+=raw[k]; });
+  const w={}; krav.order.forEach(k=> w[k]=raw[k]/sum);
+  return w;
+}
+
+// ---- Storage (persistent across sessions, with graceful fallback) ----
+async function loadBoliger(){
+  try{
+    const r = await window.storage.get('husjakt:boliger');
+    if(r && r.value) boliger = JSON.parse(r.value);
+  }catch(e){ boliger = []; }
+  try{
+    const a = await window.storage.get('husjakt:assume');
+    if(a && a.value){ const v=JSON.parse(a.value);
+      if(v.rente!=null) document.getElementById('rente').value=v.rente;
+      if(v.lopetid!=null) document.getElementById('lopetid').value=v.lopetid; }
+  }catch(e){}
+}
+async function saveBoliger(){
+  try{ await window.storage.set('husjakt:boliger', JSON.stringify(boliger)); }catch(e){}
+}
+async function saveKrav(){
+  try{ await window.storage.set('husjakt:krav', JSON.stringify(krav)); }catch(e){}
+}
+async function loadKrav(){
+  try{ const r=await window.storage.get('husjakt:krav');
+    if(r && r.value) krav={...krav, ...JSON.parse(r.value)}; }catch(e){}
+  applyKravToInputs();
+}
+function applyKravToInputs(){
+  document.getElementById('kBudsjett').value = krav.budsjett ?? '';
+  document.getElementById('kStreng').value = String(krav.streng);
+  document.getElementById('kMinBra').value = krav.minBra ?? '';
+  document.getElementById('kMinSov').value = krav.minSov ?? '';
+  document.getElementById('kTg3').value = krav.tg3tol;
+  buildRanking();
+}
+function moveRank(i,dir){
+  const j=i+dir; if(j<0||j>=krav.order.length) return;
+  const o=krav.order.slice(); [o[i],o[j]]=[o[j],o[i]]; krav.order=o;
+  buildRanking(); saveKrav(); render();
+}
+function reorderRank(from,to){
+  if(from==null||from===to||from<0||to<0) return;
+  const o=krav.order.slice(); const [m]=o.splice(from,1); o.splice(to,0,m); krav.order=o;
+  buildRanking(); saveKrav(); render();
+}
+function buildRanking(){
+  const w=weightsFromOrder();
+  const wrap=document.getElementById('weights'); wrap.innerHTML='';
+  const head=document.createElement('div'); head.className='rank-head';
+  head.textContent='Prioritering — viktigst øverst (dra, eller bruk pilene)';
+  wrap.appendChild(head);
+  krav.order.forEach((key,i)=>{
+    const c=CRIT.find(x=>x.key===key);
+    const pct=Math.round(w[key]*100);
+    const row=document.createElement('div'); row.className='rank-row'; row.draggable=true; row.dataset.idx=i;
+    row.innerHTML=`<span class="grip">⠿</span><span class="rk">${i+1}</span>`+
+      `<span class="rl">${c.label}</span><span class="rp">${pct}%</span>`+
+      `<span class="rbtns"><button class="rbtn" data-up="${i}" ${i===0?'disabled':''} title="Flytt opp">▲</button>`+
+      `<button class="rbtn" data-down="${i}" ${i===krav.order.length-1?'disabled':''} title="Flytt ned">▼</button></span>`;
+    row.ondragstart=e=>{ dragIdx=i; e.dataTransfer.effectAllowed='move'; row.classList.add('dragging'); };
+    row.ondragend=()=>{ row.classList.remove('dragging'); dragIdx=null; };
+    row.ondragover=e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; };
+    row.ondrop=e=>{ e.preventDefault(); reorderRank(dragIdx, i); };
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveRank(+b.dataset.up,-1));
+  wrap.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveRank(+b.dataset.down,1));
+}
+async function saveAssume(){
+  try{ await window.storage.set('husjakt:assume', JSON.stringify({
+    rente:+document.getElementById('rente').value, lopetid:+document.getElementById('lopetid').value })); }catch(e){}
+}
+
+// ---- Export / import (back up your results to a file) ----
+function exportData(){
+  const payload={ app:'husjakt', version:1, exportedAt:new Date().toISOString(),
+    boliger, krav,
+    assume:{ rente:+document.getElementById('rente').value, lopetid:+document.getElementById('lopetid').value } };
+  const json=JSON.stringify(payload,null,2);
+  const stamp=new Date().toISOString().slice(0,10);
+  try{
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`husjakt-${stamp}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  }catch(e){
+    // Fallback if file download is blocked: show JSON to copy
+    showJsonFallback(json);
+  }
+}
+function showJsonFallback(json){
+  const m=document.getElementById('jsonModal');
+  document.getElementById('jsonText').value=json;
+  m.style.display='flex';
+}
+async function importData(file){
+  const errEl=document.getElementById('extractErr');
+  try{
+    const txt=await file.text();
+    const d=JSON.parse(txt);
+    if(!Array.isArray(d.boliger)) throw new Error('mangler boliger');
+    if(boliger.length && !confirm('Erstatte de '+boliger.length+' boligene du har nå med innholdet fra filen?')) return;
+    boliger = d.boliger.map(b=> b.id ? b : {...b, id:Date.now()+'-'+Math.random().toString(36).slice(2,6)});
+    if(d.krav) krav={...krav, ...d.krav};
+    if(d.assume){ document.getElementById('rente').value=d.assume.rente ?? document.getElementById('rente').value;
+      document.getElementById('lopetid').value=d.assume.lopetid ?? document.getElementById('lopetid').value; saveAssume(); }
+    await saveBoliger(); await saveKrav();
+    applyKravToInputs(); cancelEdit(); render();
+  }catch(e){
+    errEl.textContent='Kunne ikke importere filen ('+(e.message||e)+'). Velg en husjakt-eksportfil (.json).';
+  }
+}
+
+// ---- Build the manual form ----
+function buildForm(){
+  const grid = document.getElementById('formGrid');
+  grid.innerHTML = '';
+  FIELDS.forEach(f=>{
+    const d = document.createElement('div'); d.className='field';
+    const lab = document.createElement('label'); lab.textContent=f.label; lab.htmlFor='f_'+f.key;
+    d.appendChild(lab);
+    if(f.suf){
+      const w=document.createElement('div'); w.className='suffix';
+      const inp=document.createElement('input'); inp.id='f_'+f.key; inp.type='number'; inp.step='any';
+      const s=document.createElement('span'); s.textContent=f.suf;
+      w.appendChild(inp); w.appendChild(s); d.appendChild(w);
+    }else{
+      const inp=document.createElement('input'); inp.id='f_'+f.key; inp.type=f.type==='num'?'number':'text';
+      d.appendChild(inp);
+    }
+    grid.appendChild(d);
+  });
+}
+function readForm(){
+  const o={};
+  FIELDS.forEach(f=>{
+    let v=document.getElementById('f_'+f.key).value.trim();
+    if(v==='') { o[f.key]=null; return; }
+    o[f.key] = f.type==='num' ? Number(v.replace(/\s/g,'').replace(',','.')) : v;
+  });
+  return o;
+}
+function fillForm(o){
+  FIELDS.forEach(f=>{
+    const el=document.getElementById('f_'+f.key);
+    el.value = (o && o[f.key]!=null) ? o[f.key] : '';
+  });
+}
+
+// ---- AI extraction from pasted salgsoppgave ----
+async function extract(){
+  const txt = document.getElementById('paste').value.trim();
+  const errEl = document.getElementById('extractErr');
+  const btn = document.getElementById('extractBtn');
+  errEl.textContent='';
+  if(txt.length<15){ errEl.textContent='Lim inn litt mer tekst først.'; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Analyserer …';
+  const prompt = `Du er en erfaren norsk bolig- og takstrådgiver. Teksten under er fra én bolig og kan inneholde BÅDE salgsoppgave OG tilstandsrapport/takst. Les begge deler, tolk innholdet, og svar KUN med ren JSON (ingen forklaring, ingen markdown).
+
+Regler for tall: rene tall uten mellomrom, "kr" eller "m²" (4 500 000 -> 4500000; 3,5 -> 3.5). felleskostnader er per måned. bruksareal er BRA-i/BRA/P-rom i m². Bruk null der verdien mangler.
+
+For TG2/TG3: Tilstandsgrad fra tilstandsrapporten. TG2 = avvik som kan kreve tiltak/vedlikehold. TG3 = vesentlige avvik / strakstiltak. Ta med ALLE TG2- og TG3-funn du finner. For hvert funn: tema (kort, f.eks. "Drenering", "Bad", "Tak"), beskrivelse (kort, konkret), og kostnad_lav/kostnad_hoy i kroner. Bruk takstrapportens egne kostnadsestimater der de finnes; ellers gi et grovt anslag og forklar i estimat_kommentar at det er et grovt anslag. Sett kostnad til null kun hvis du ikke har grunnlag for å anslå.
+
+samlet_estimat = totalt anslått behov for utbedring/oppgradering (sum av de viktigste TG2/TG3-funnene), som intervall {lav, hoy}.
+
+Svar med nøyaktig denne JSON-strukturen:
+{"adresse":str,"boligtype":str,"eierform":str,"prisantydning":num,"omkostninger":num,"fellesgjeld":num,"felleskostnader":num,"bruksareal":num,"byggeaar":num,"soverom":num,"etasje":str,"energimerke":str,
+"vurdering":"2-4 setninger som tolker boligens helhetsinntrykk, standard og det viktigste en kjøper bør vite",
+"fordeler":["kort punkt", "..."],
+"ulemper":["kort punkt", "..."],
+"tg3":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
+"tg2":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
+"samlet_estimat":{"lav":num,"hoy":num},
+"estimat_kommentar":"kort om hva estimatet bygger på og usikkerhet"}
+
+Dokument(er):
+"""${txt.slice(0,150000)}"""`;
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:4000,
+        messages:[{role:"user",content:prompt}] })
+    });
+    if(res.status===429){ errEl.textContent='For mange forespørsler akkurat nå — vent et minutt og trykk «Analyser tekst» på nytt. Teksten er beholdt.'; return false; }
+    if(!res.ok) throw new Error('status '+res.status);
+    const data = await res.json();
+    let text = (data.content||[]).map(c=>c.text||'').join('').trim();
+    text = text.replace(/```json/gi,'').replace(/```/g,'').trim();
+    const m = text.match(/\{[\s\S]*\}/);
+    const parsed = JSON.parse(m?m[0]:text);
+    const belPrev = document.getElementById('f_uteareal').value;
+    fillForm(parsed);
+    if(belPrev) document.getElementById('f_uteareal').value = belPrev;
+    pendingAnalysis = {};
+    ANALYSIS_KEYS.forEach(k=> pendingAnalysis[k] = (parsed[k]!=null?parsed[k]:null));
+    document.getElementById('saveHint').textContent='Analysert — sjekk feltene og lagre boligen for å se vurderingen.';
+    return true;
+  }catch(e){
+    errEl.textContent='Klarte ikke å analysere automatisk («'+(e.message||e)+'»). Teksten er beholdt i feltet — prøv «Analyser tekst» igjen, eller fyll inn nøkkelfeltene manuelt.';
+    return false;
+  }finally{
+    btn.disabled=false; btn.textContent='Analyser tekst';
+  }
+}
+
+// ---- Read PDF text in the browser (pdf.js) ----
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+async function readPdf(file){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  let text='';
+  const status=document.getElementById('pdfStatus');
+  for(let p=1;p<=pdf.numPages;p++){
+    status.textContent=`Leser side ${p} av ${pdf.numPages} …`;
+    const page=await pdf.getPage(p);
+    const content=await page.getTextContent();
+    text += content.items.map(it=>it.str).join(' ')+'\n';
+  }
+  return text;
+}
+async function handlePdfs(files){
+  const status=document.getElementById('pdfStatus');
+  const errEl=document.getElementById('extractErr');
+  errEl.textContent='';
+  files = Array.from(files||[]);
+  if(!files.length) return;
+  if(!window.pdfjsLib){ errEl.textContent='PDF-leseren lastet ikke (sjekk nettverkstilgang). Lim inn teksten i feltet under i stedet.'; return; }
+  let all='';
+  try{
+    for(const file of files){
+      status.textContent=`Åpner ${file.name} …`;
+      const t = await readPdf(file);
+      all += `\n\n===== DOKUMENT: ${file.name} =====\n` + t;
+    }
+  }catch(e){
+    status.textContent='Klarte ikke å lese PDF-en(e).';
+    errEl.textContent='Kunne ikke lese filen ('+(e.message||e)+'). Er den passordbeskyttet eller skadet? Du kan lime inn teksten manuelt.';
+    return;
+  }
+  if(all.replace(/\s/g,'').length < 40){
+    status.textContent='Fant ingen tekst i PDF-en(e).';
+    errEl.textContent='Dokumentet ser ut til å være skannet (bilde uten tekstlag), så det finnes ingen tekst å lese. Åpne PDF-en, marker teksten, og lim den inn i feltet under.';
+    return;
+  }
+  document.getElementById('paste').value = all;
+  const names = files.map(f=>f.name).join(', ');
+  status.innerHTML = `<span class="pdfname">✓ Leste ${esc(names)}</span> — analyserer …`;
+  const ok = await extract();
+  status.innerHTML = ok
+    ? `<span class="pdfname">✓ ${esc(names)}</span> — ferdig analysert. Husk å lagre boligen.`
+    : `<span class="pdfname">✓ Leste ${esc(names)}</span> — men analysen feilet (se melding under). Teksten ligger klar i feltet.`;
+}
+
+// ---- Save / edit / delete ----
+function startEdit(id){
+  const b = boliger.find(x=>x.id===id); if(!b) return;
+  editingId=id; fillForm(b);
+  pendingAnalysis={}; ANALYSIS_KEYS.forEach(k=> pendingAnalysis[k]=(b[k]!=null?b[k]:null));
+  document.getElementById('paste').value='';
+  document.getElementById('panelTitle').textContent='Rediger bolig';
+  document.getElementById('saveBtn').textContent='Oppdater bolig';
+  document.getElementById('cancelEdit').style.display='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelEdit(){
+  editingId=null; pendingAnalysis=null; fillForm(null);
+  document.getElementById('panelTitle').textContent='Legg til en bolig';
+  document.getElementById('saveBtn').textContent='Lagre bolig';
+  document.getElementById('cancelEdit').style.display='none';
+  document.getElementById('saveHint').textContent='';
+}
+async function save(){
+  const o = readForm();
+  const analysis = pendingAnalysis || {};
+  if(!o.adresse && o.prisantydning==null){
+    document.getElementById('saveHint').textContent='Legg inn minst adresse/navn eller prisantydning.'; return;
+  }
+  if(!o.adresse) o.adresse = 'Bolig '+(boliger.length+1);
+  if(editingId){
+    const i=boliger.findIndex(x=>x.id===editingId); boliger[i]={...boliger[i],...o,...analysis};
+  }else{
+    o.id = Date.now()+'-'+Math.random().toString(36).slice(2,6); boliger.push({...o,...analysis});
+  }
+  await saveBoliger();
+  cancelEdit(); render();
+}
+async function del(id){
+  boliger = boliger.filter(x=>x.id!==id);
+  if(editingId===id) cancelEdit();
+  await saveBoliger(); render();
+}
+
+// ---- Computed metrics ----
+function totalpris(b){
+  const p=b.prisantydning, o=b.omkostninger||0, f=b.fellesgjeld||0;
+  return p==null?null:p+o+f;
+}
+function prisPerM2(b){
+  const t=totalpris(b);
+  return (t==null||!b.bruksareal)?null:t/b.bruksareal;
+}
+function maanedlig(b){
+  const t=totalpris(b); if(t==null) return null;
+  const r=(+document.getElementById('rente').value)/100/12;
+  const n=(+document.getElementById('lopetid').value)*12;
+  let laan = (r>0) ? t*r/(1-Math.pow(1+r,-n)) : t/n;
+  return laan + (b.felleskostnader||0);
+}
+const tg3Count = b => hasAnalysis(b) ? (b.tg3||[]).length : null;
+const tg2Count = b => hasAnalysis(b) ? (b.tg2||[]).length : null;
+function estLav(b){ return b.samlet_estimat && b.samlet_estimat.lav!=null ? b.samlet_estimat.lav : null; }
+function estHoy(b){ return b.samlet_estimat && b.samlet_estimat.hoy!=null ? b.samlet_estimat.hoy : null; }
+function estMid(b){ const l=estLav(b), h=estHoy(b); if(l==null&&h==null) return null; return ((l||h)+(h||l))/2; }
+function estRange(b){ const l=estLav(b), h=estHoy(b); if(l==null&&h==null) return null;
+  return (l!=null?fmtKr(l):'?')+' – '+(h!=null?fmtKr(h):'?'); }
+function totalMedUtbedring(b){ const t=totalpris(b), m=estMid(b); return (t!=null&&m!=null)? t+m : null; }
+function hasAnalysis(b){ return !!(b.vurdering || (b.tg2&&b.tg2.length) || (b.tg3&&b.tg3.length) || (b.fordeler&&b.fordeler.length) || (b.ulemper&&b.ulemper.length) || b.samlet_estimat); }
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function band(p){
+  if(p>=75) return {label:'Sterkt kjøp', color:'var(--pine)'};
+  if(p>=60) return {label:'Godt kjøp',   color:'var(--gold)'};
+  if(p>=40) return {label:'Middels',     color:'var(--gold)'};
+  return {label:'Svakt',                 color:'var(--clay)'};
+}
+function relativeValueScore(b){
+  const vals=boliger.map(prisPerM2).filter(v=>v!=null&&!isNaN(v));
+  const v=prisPerM2(b);
+  if(v==null||vals.length<2) return 60;
+  const lo=Math.min(...vals), hi=Math.max(...vals);
+  if(hi===lo) return 60;
+  return clamp(90 - (v-lo)/(hi-lo)*50, 40, 90); // cheapest per m² -> 90, dearest -> 40
+}
+function scoreFor(b){
+  const W = weightsFromOrder();
+  const tp=totalpris(b);
+  const eff=(tp!=null)? tp+(estMid(b)||0) : null;
+
+  // Størrelse & planløsning
+  let sSize=50;
+  if(b.bruksareal){
+    if(krav.minBra){ const r=b.bruksareal/(+krav.minBra);
+      sSize = r>=1 ? clamp(60+(r-1)*80,60,100) : clamp(r*60,0,60);
+    } else sSize=72;
+    if(krav.minSov && b.soverom!=null && b.soverom<+krav.minSov) sSize*=0.7;
+  }
+  // Uteareal (brukerens egen vurdering 1–5)
+  let sUte = (b.uteareal!=null && b.uteareal!=='') ? clamp(((+b.uteareal)-1)/4*100,0,100) : 50;
+  // Standard & tilstand
+  let sCond=50;
+  if(hasAnalysis(b)){
+    const t3=(b.tg3||[]).length, t2=(b.tg2||[]).length;
+    const per3 = krav.tg3tol==='avoid'?26 : krav.tg3tol==='comp'?18 : 12;
+    const pen3 = t3*per3;                      // alvorlige avvik: lineært og tungt
+    const pen2 = 32*(t2/(t2+5));               // TG2: avtagende, metter mot ~32 (aldri alene til 0)
+    const m=estMid(b);                          // utbedringskostnad som andel av pris
+    const penCost = (tp&&m)? clamp((m/tp)*130, 0, 22) : 0;
+    sCond = clamp(Math.round(100 - pen3 - pen2 - penCost), 0, 100);
+  }
+  // Pris & økonomi
+  let sPrice=50;
+  if(eff!=null && krav.budsjett){
+    const ratio=eff/(+krav.budsjett);
+    if(ratio<=1) sPrice=clamp(100-40*ratio,55,100);
+    else { const k=krav.streng>0?520:(krav.streng===0?300:170); sPrice=clamp(55-(ratio-1)*k,0,55); }
+  } else if(eff!=null){ sPrice=relativeValueScore(b); }
+
+  let pct = sSize*W.size + sUte*W.uteareal + sCond*W.cond + sPrice*W.price;
+  const notes=[];
+  if(eff!=null && krav.budsjett){
+    if(eff > +krav.budsjett){ pct=Math.min(pct, krav.streng>0?42:(krav.streng===0?54:62)); notes.push({t:'Over budsjett-taket',k:'bad'}); }
+    else if(eff <= +krav.budsjett*0.92) notes.push({t:'God margin til budsjett',k:'good'});
+  }
+  const t3=(b.tg3||[]).length;
+  if(t3>0){
+    const pen = krav.tg3tol==='avoid'?Math.min(32,t3*15) : krav.tg3tol==='comp'?Math.min(20,t3*9) : Math.min(10,t3*5);
+    pct-=pen; notes.push({t:t3+' TG3-avvik',k:'bad'});
+  }
+  const t2=(b.tg2||[]).length;
+  if(t2>=8) notes.push({t:t2+' TG2-avvik',k:'bad'});
+  if(krav.minBra && b.bruksareal && b.bruksareal<+krav.minBra) notes.push({t:'Under ønsket størrelse',k:'bad'});
+  if(krav.minSov && b.soverom!=null && b.soverom<+krav.minSov) notes.push({t:'Færre soverom enn ønsket',k:'bad'});
+  if(b.bruksareal && krav.minBra && b.bruksareal>=+krav.minBra*1.2) notes.push({t:'Romslig',k:'good'});
+
+  pct=clamp(Math.round(pct),0,100);
+  const enough=(tp!=null || b.bruksareal!=null || hasAnalysis(b));
+  return {pct, band:band(pct), notes, enough,
+    parts:[{label:'Størrelse',score:Math.round(sSize),w:Math.round(W.size*100)},
+           {label:'Uteareal',score:Math.round(sUte),w:Math.round(W.uteareal*100)},
+           {label:'Standard',score:Math.round(sCond),w:Math.round(W.cond*100)},
+           {label:'Pris',score:Math.round(sPrice),w:Math.round(W.price*100)}]};
+}
+
+// ---- Render comparison table ----
+const ROWS = [
+  {section:'Totalvurdering'},
+  {label:'Kjøpsscore', get:b=>{const s=scoreFor(b); return s.enough?s.pct:null;},
+   display:b=>{const s=scoreFor(b); return s.enough? s.pct+'% · '+s.band.label : null;},
+   higher:true, big:true, badge:true},
+  {section:'Pris'},
+  {label:'Prisantydning', get:b=>b.prisantydning, fmt:fmtKr, lower:true},
+  {label:'Omkostninger',  get:b=>b.omkostninger,  fmt:fmtKr, lower:true},
+  {label:'Fellesgjeld',   get:b=>b.fellesgjeld,   fmt:fmtKr, lower:true},
+  {label:'Totalpris',     get:totalpris,          fmt:fmtKr, lower:true, big:true, badge:true},
+  {label:'Pris per m²',   get:prisPerM2,          fmt:n=>fmtKr(n), lower:true, badge:true},
+  {section:'Bolig'},
+  {label:'Boligtype',     get:b=>b.boligtype,     fmt:v=>v},
+  {label:'Eierform',      get:b=>b.eierform,      fmt:v=>v},
+  {label:'Bruksareal',    get:b=>b.bruksareal,    fmt:n=>fmtNum(n,' m²'), higher:true},
+  {label:'Soverom',       get:b=>b.soverom,       fmt:n=>fmtNum(n), higher:true},
+  {label:'Byggeår',       get:b=>b.byggeaar,      fmt:n=>n==null?null:String(n), higher:true},
+  {label:'Etasje',        get:b=>b.etasje,        fmt:v=>v},
+  {label:'Energimerke',   get:b=>b.energimerke,   fmt:v=>v},
+  {section:'Tilstand & kostnad'},
+  {label:'TG3-avvik (alvorlige)', get:tg3Count, fmt:n=>n+(n===1?' avvik':' avvik'), lower:true, badge:true},
+  {label:'TG2-avvik',     get:tg2Count, fmt:n=>n+' avvik', lower:true},
+  {label:'Est. utbedring', get:estMid, display:b=>estRange(b), lower:true, badge:true},
+  {label:'Totalpris + utbedring', get:totalMedUtbedring, fmt:fmtKr, lower:true, big:true, badge:true},
+  {section:'Bokostnader'},
+  {label:'Felleskostnader / mnd', get:b=>b.felleskostnader, fmt:fmtKr, lower:true},
+  {label:'Est. bokostnad / mnd',  get:maanedlig, fmt:fmtKr, lower:true, big:true, badge:true},
+];
+
+function bestIndex(row){
+  if(!row.lower && !row.higher) return -1;
+  let bi=-1, bv=null;
+  boliger.forEach((b,i)=>{
+    const v=row.get(b);
+    if(v==null||isNaN(v)) return;
+    if(bv==null || (row.lower? v<bv : v>bv)){ bv=v; bi=i; }
+  });
+  // only highlight if there are at least 2 valid, distinct-ish values
+  const vals = boliger.map(b=>row.get(b)).filter(v=>v!=null&&!isNaN(v));
+  if(vals.length<2 || vals.every(v=>v===vals[0])) return -1;
+  return bi;
+}
+
+function render(){
+  const area=document.getElementById('compareArea');
+  const cnt=document.getElementById('count');
+  cnt.textContent = boliger.length? boliger.length+(boliger.length===1?' bolig':' boliger') : '';
+  if(boliger.length===0){
+    document.getElementById('detailsArea').innerHTML='';
+    area.innerHTML='<div class="empty"><strong>Ingen boliger ennå</strong>Last opp salgsoppgave og takst over, eller fyll ut feltene manuelt.</div>';
+    return;
+  }
+  let html='<div class="table-scroll"><table><thead><tr><th class="rowlabel"></th>';
+  boliger.forEach(b=>{
+    html+=`<th class="home-th"><div class="home-name">${esc(b.adresse||'Bolig')}</div>`+
+          `<div class="home-sub">${esc([b.boligtype,b.eierform].filter(Boolean).join(' · '))}</div>`+
+          `<div class="th-actions"><button class="btn-ghost btn-sm" data-edit="${b.id}">Rediger</button>`+
+          `<button class="btn-ghost btn-sm" data-del="${b.id}">Slett</button></div></th>`;
+  });
+  html+='</tr></thead><tbody>';
+  ROWS.forEach(row=>{
+    if(row.section){
+      html+=`<tr class="section-row"><td colspan="${boliger.length+1}">${row.section}</td></tr>`; return;
+    }
+    const bi = bestIndex(row);
+    html+=`<tr><td class="rowlabel">${row.label}</td>`;
+    boliger.forEach((b,i)=>{
+      const raw=row.get(b);
+      const out = row.display ? row.display(b) : ((raw==null||raw==='')?null:row.fmt(raw));
+      const isBest = i===bi;
+      html+=`<td class="${isBest?'best':''}">`;
+      if(out==null){ html+='<span class="cell-val cell-na">—</span>'; }
+      else{
+        html+=`<span class="cell-val${row.big?' cell-big':''}">${esc(out)}</span>`;
+        if(isBest && row.badge) html+='<span class="badge">Best</span>';
+      }
+      html+='</td>';
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  area.innerHTML=html;
+  area.querySelectorAll('[data-edit]').forEach(el=>el.onclick=()=>startEdit(el.dataset.edit));
+  area.querySelectorAll('[data-del]').forEach(el=>el.onclick=()=>del(el.dataset.del));
+  renderDetails();
+}
+
+function tgItem(it, cls){
+  const kost = (it.kostnad_lav!=null||it.kostnad_hoy!=null)
+    ? `<span class="kost">${(it.kostnad_lav!=null?fmtKr(it.kostnad_lav):'?')} – ${(it.kostnad_hoy!=null?fmtKr(it.kostnad_hoy):'?')}</span>`
+    : '<span class="kost" style="opacity:.6">ikke estimert</span>';
+  return `<div class="tg-item ${cls}"><div class="tema"><span>${esc(it.tema||'Avvik')}</span>${kost}</div>`+
+         `${it.beskrivelse?`<div class="desc">${esc(it.beskrivelse)}</div>`:''}</div>`;
+}
+
+function scoreSummary(sc){
+  if(!sc.enough) return '';
+  const sorted=sc.parts.slice().sort((a,b)=>b.score-a.score);
+  const best=sorted[0], worst=sorted[sorted.length-1];
+  const overBudget=sc.notes.some(n=>n.t.includes('budsjett-taket'));
+  const hasTg3=sc.notes.some(n=>n.t.includes('TG3'));
+  const godMargin=sc.notes.some(n=>n.t.includes('God margin'));
+  const negNotes=sc.notes.filter(n=>n.k==='bad');
+  let s1,s2;
+  if(sc.pct>=75){
+    s1=`Scoren er høy, drevet av sterk ${best.label.toLowerCase()} (${best.score}/100) vektet mot dine prioriteringer.`;
+    s2=godMargin?'Boligen er godt innenfor budsjett, noe som gir ekstra rom.':worst.score<55?`${worst.label} (${worst.score}/100) er det svakeste leddet, men veier ikke tungt nok til å trekke ned totalen.`:'Ingen vesentlige negative trekk.';
+  } else if(sc.pct>=60){
+    s1=`${best.label} (${best.score}/100) trekker opp, men ${worst.label.toLowerCase()} (${worst.score}/100) holder scoren igjen.`;
+    s2=overBudget?'Boligen er over budsjett-taket, som setter et tak på totalen.':hasTg3?'TG3-avvik gir et ekstra trekk på toppen av vektingen.':'Et godt alternativ med noen svakheter å veie opp mot.';
+  } else if(sc.pct>=40){
+    s1=negNotes.length?`Scoren trekkes ned av ${negNotes.map(n=>n.t).join(' og ')}.`:`${worst.label} (${worst.score}/100) er det tyngste svake punktet sett mot vektingen din.`;
+    s2=overBudget?'Over-budsjett-straffen setter alene et hardt tak uansett andre styrker.':hasTg3?'TG3-avvik gir et ekstra trekk utover delscorene.':'Forbedring på '+worst.label.toLowerCase()+' vil ha størst effekt på scoren.';
+  } else {
+    s1=negNotes.length?`Scoren er lav, primært på grunn av: ${negNotes.map(n=>n.t).join(' og ')}.`:`Lave delscorer på ${worst.label.toLowerCase()} (${worst.score}/100) og ${sorted[sorted.length-2].label.toLowerCase()} (${sorted[sorted.length-2].score}/100) trekker helheten ned.`;
+    s2=overBudget&&hasTg3?'Kombinasjonen av over budsjett og TG3-avvik gir et hardt samlet trekk.':overBudget?'Budsjett-overskredet setter et strengt tak på totalscoren.':hasTg3?'TG3-avvik veier tungt og kompenseres ikke av styrker på andre kriterier.':'En samlet svak profil sett mot dine krav og prioriteringer.';
+  }
+  return s1+' '+s2;
+}
+
+function renderDetails(){
+  const wrap=document.getElementById('detailsArea');
+  if(boliger.length===0){ wrap.innerHTML=''; return; }
+  const allOpen = boliger.every(b=>expanded.has(b.id));
+  let html='<div class="details"><div class="details-top">'+
+           '<div class="details-h">Vurdering per bolig</div>'+
+           `<button class="btn-ghost btn-sm" id="toggleAll">${allOpen?'Lukk alle':'Åpne alle'}</button></div>`;
+  boliger.forEach(b=>{
+    const isOpen=expanded.has(b.id);
+    const sc=scoreFor(b);
+    const pill = sc.enough ? `<span class="score-pill" style="color:${sc.band.color}">${sc.pct}% · ${sc.band.label}</span>` : '';
+    html+=`<div class="dcard${isOpen?' open':''}">`;
+    html+=`<div class="dcard-head" data-toggle="${b.id}"><span class="chev">›</span>`+
+          `<span class="dh-main"><span class="nm">${esc(b.adresse||'Bolig')}</span>`+
+          `<span class="meta">${esc([b.boligtype,b.eierform,b.bruksareal?b.bruksareal+' m²':null,b.byggeaar].filter(Boolean).join(' · '))}</span></span>`+
+          `${pill}</div>`;
+    html+='<div class="dcard-body">';
+    if(sc.enough){
+      html+='<div class="scoreblock">';
+      html+=`<div class="score-main"><div class="score-pct" style="color:${sc.band.color}">${sc.pct}%</div>`+
+            `<div class="score-band" style="color:${sc.band.color}">${sc.band.label}</div>`+
+            `<div class="score-sub">veiledende, ut fra dine krav</div></div>`;
+      html+='<div class="score-bars">';
+      sc.parts.forEach(p=>{
+        html+=`<div class="sbar"><span class="bl">${p.label} <span class="bw">${p.w}%</span></span>`+
+              `<span class="track"><span class="fill" style="width:${p.score}%"></span></span>`+
+              `<span class="sv">${p.score}</span></div>`;
+      });
+      html+='</div>';
+      if(sc.notes.length){
+        html+='<div class="score-notes">'+sc.notes.map(n=>`<span class="chip ${n.k}">${esc(n.t)}</span>`).join('')+'</div>';
+      }
+      const summary=scoreSummary(sc);
+      if(summary) html+=`<div class="score-summary">${esc(summary)}</div>`;
+      html+='</div>';
+    }
+    if(!hasAnalysis(b)){
+      html+='<div class="dcard-empty" style="padding:8px 0 0">Ingen tekstvurdering ennå — last opp salgsoppgave/takst for å få tolkning, fordeler/ulemper og TG-avvik. Sett gjerne også en uteareal-vurdering (1–5) på boligen.</div></div></div>';
+      return;
+    }
+    if(b.vurdering) html+=`<div class="vurdering">${esc(b.vurdering)}</div>`;
+    const pros=(b.fordeler||[]), cons=(b.ulemper||[]);
+    if(pros.length||cons.length){
+      html+='<div class="pc">';
+      html+='<div class="pros"><h4>Fordeler</h4><ul>'+(pros.length?pros.map(p=>`<li>${esc(p)}</li>`).join(''):'<li style="list-style:none;padding-left:0;color:var(--ink-faint)">—</li>')+'</ul></div>';
+      html+='<div class="cons"><h4>Ulemper</h4><ul>'+(cons.length?cons.map(c=>`<li>${esc(c)}</li>`).join(''):'<li style="list-style:none;padding-left:0;color:var(--ink-faint)">—</li>')+'</ul></div>';
+      html+='</div>';
+    }
+    const tg3=(b.tg3||[]), tg2=(b.tg2||[]);
+    html+='<div class="tg-block">';
+    html+='<div class="tg-h three"><span class="tag">TG3</span><span class="lbl">Vesentlige avvik / strakstiltak</span></div>';
+    html+= tg3.length ? tg3.map(it=>tgItem(it,'three')).join('') : '<div class="tg-none">Ingen TG3-avvik registrert.</div>';
+    html+='</div>';
+    html+='<div class="tg-block">';
+    html+='<div class="tg-h two"><span class="tag">TG2</span><span class="lbl">Avvik som kan kreve tiltak</span></div>';
+    html+= tg2.length ? tg2.map(it=>tgItem(it,'two')).join('') : '<div class="tg-none">Ingen TG2-avvik registrert.</div>';
+    html+='</div>';
+    if(b.samlet_estimat && (b.samlet_estimat.lav!=null||b.samlet_estimat.hoy!=null)){
+      html+='<div class="estimate"><div class="top"><span class="ttl">Samlet kostnadsestimat for utbedring</span>'+
+            `<span class="amt">${esc(estRange(b))}</span></div>`+
+            (b.estimat_kommentar?`<div class="cmt">${esc(b.estimat_kommentar)}</div>`:'')+'</div>';
+    }
+    html+='</div></div>';
+  });
+  html+='</div>';
+  wrap.innerHTML=html;
+  wrap.querySelectorAll('[data-toggle]').forEach(el=>el.onclick=()=>{
+    const id=el.dataset.toggle;
+    if(expanded.has(id)) expanded.delete(id); else expanded.add(id);
+    el.closest('.dcard').classList.toggle('open');
+    const t=document.getElementById('toggleAll');
+    if(t) t.textContent = boliger.every(b=>expanded.has(b.id)) ? 'Lukk alle' : 'Åpne alle';
+  });
+  const ta=document.getElementById('toggleAll');
+  if(ta) ta.onclick=()=>{
+    if(boliger.every(b=>expanded.has(b.id))) expanded.clear();
+    else boliger.forEach(b=>expanded.add(b.id));
+    renderDetails();
+  };
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ---- Wire up ----
+document.getElementById('extractBtn').onclick=extract;
+document.getElementById('pdfBtn').onclick=()=>document.getElementById('pdfInput').click();
+document.getElementById('pdfInput').onchange=e=>{ handlePdfs(e.target.files); e.target.value=''; };
+document.getElementById('saveBtn').onclick=save;
+document.getElementById('cancelEdit').onclick=cancelEdit;
+document.getElementById('clearAll').onclick=async()=>{
+  if(boliger.length && confirm('Slette alle boliger?')){ boliger=[]; await saveBoliger(); cancelEdit(); render(); }
+};
+document.getElementById('exportBtn').onclick=exportData;
+document.getElementById('importBtn').onclick=()=>document.getElementById('importInput').click();
+document.getElementById('importInput').onchange=e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
+document.getElementById('closeJson').onclick=()=>document.getElementById('jsonModal').style.display='none';
+document.getElementById('copyJson').onclick=()=>{
+  const ta=document.getElementById('jsonText'); ta.select();
+  try{ document.execCommand('copy'); document.getElementById('copyJson').textContent='Kopiert ✓'; }catch(e){}
+};
+document.getElementById('jsonModal').onclick=e=>{ if(e.target.id==='jsonModal') e.target.style.display='none'; };
+['rente','lopetid'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{ saveAssume(); render(); }));
+
+function bindKrav(id,key,num){
+  document.getElementById(id).addEventListener('input',e=>{
+    let v=e.target.value;
+    krav[key] = num ? (v===''?null:Number(v)) : v;
+    saveKrav(); render();
+  });
+}
+bindKrav('kBudsjett','budsjett',true);
+bindKrav('kMinBra','minBra',true);
+bindKrav('kMinSov','minSov',true);
+bindKrav('kStreng','streng',true);
+bindKrav('kTg3','tg3tol',false);
+
+buildForm();
+loadKrav();
+loadBoliger().then(render);
+</script>
+
+
+</body></html>

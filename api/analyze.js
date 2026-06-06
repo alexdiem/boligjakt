@@ -1,16 +1,12 @@
-import express from "express";
 import Anthropic from "@anthropic-ai/sdk";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const app = express();
 const client = new Anthropic();
 
-app.use(express.json({ limit: "2mb" }));
-app.use(express.static(__dirname));
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
-app.post("/api/analyze", async (req, res) => {
   const { text } = req.body;
   if (!text || text.trim().length < 15) {
     return res.status(400).json({ error: "Too little text provided" });
@@ -62,9 +58,4 @@ Dokument(er):
     console.error("Anthropic API error:", e.message);
     res.status(500).json({ error: e.message || "Internal server error" });
   }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+}

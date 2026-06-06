@@ -399,6 +399,11 @@ const FIELDS = [
   {key:'uteareal', label:'Uteareal (1–5, din vurdering)', type:'num'},
 ];
 
+window.storage = {
+  get: (key) => Promise.resolve(localStorage.getItem(key) != null ? { value: localStorage.getItem(key) } : null),
+  set: (key, value) => { localStorage.setItem(key, value); return Promise.resolve(); },
+};
+
 let boliger = [];
 let editingId = null;
 let expanded = new Set();
@@ -611,18 +616,13 @@ Svar med nøyaktig denne JSON-strukturen:
 Dokument(er):
 """${txt.slice(0,150000)}"""`;
   try{
-    const res = await fetch("https://api.anthropic.com/v1/messages",{
+    const res = await fetch("/api/analyze",{
       method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:4000,
-        messages:[{role:"user",content:prompt}] })
+      body:JSON.stringify({ text: txt })
     });
     if(res.status===429){ errEl.textContent='For mange forespørsler akkurat nå — vent et minutt og trykk «Analyser tekst» på nytt. Teksten er beholdt.'; return false; }
     if(!res.ok) throw new Error('status '+res.status);
-    const data = await res.json();
-    let text = (data.content||[]).map(c=>c.text||'').join('').trim();
-    text = text.replace(/```json/gi,'').replace(/```/g,'').trim();
-    const m = text.match(/\{[\s\S]*\}/);
-    const parsed = JSON.parse(m?m[0]:text);
+    const parsed = await res.json();
     const belPrev = document.getElementById('f_uteareal').value;
     fillForm(parsed);
     if(belPrev) document.getElementById('f_uteareal').value = belPrev;

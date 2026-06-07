@@ -606,6 +606,8 @@ async function extract(){
   const btn = document.getElementById('extractBtn');
   errEl.textContent='';
   if(txt.length<15){ errEl.textContent='Lim inn litt mer tekst først.'; return; }
+  const apiKey = getApiKey();
+  if(!apiKey){ errEl.textContent='Lim inn Anthropic API-nøkkelen din i feltet øverst på siden før du analyserer.'; return false; }
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Analyserer …';
   const prompt = `Du er en erfaren norsk bolig- og takstrådgiver. Teksten under er fra én bolig og kan inneholde BÅDE salgsoppgave OG tilstandsrapport/takst. Les begge deler, tolk innholdet, og svar KUN med ren JSON (ingen forklaring, ingen markdown).
 
@@ -627,8 +629,6 @@ Svar med nøyaktig denne JSON-strukturen:
 
 Dokument(er):
 """${txt.slice(0,150000)}"""`;
-  const apiKey = getApiKey();
-  if(!apiKey){ errEl.textContent='Lim inn Anthropic API-nøkkelen din i feltet øverst på siden før du analyserer.'; return false; }
   try{
     const res = await fetch("/api/analyze",{
       method:"POST", headers:{"Content-Type":"application/json","x-api-key":apiKey},

@@ -18,21 +18,6 @@ Dokument:
 """${text.slice(0, 80000)}"""`;
 }
 
-function sonnetPrompt(structured, textExcerpt) {
-  return `Du er en erfaren norsk bolig- og takstrådgiver. Basert på de strukturerte dataene og dokumentutdraget under, skriv en kvalitativ vurdering av boligen. Svar KUN med ren JSON (ingen forklaring, ingen markdown).
-
-Strukturerte data:
-${JSON.stringify(structured, null, 2)}
-
-Dokumentutdrag (for kontekst om beliggenhet, standard og beskrivelse):
-"""${textExcerpt}"""
-
-Svar med nøyaktig denne JSON-strukturen:
-{"vurdering":"2-4 setninger som tolker boligens helhetsinntrykk, standard og det viktigste en kjøper bør vite",
-"fordeler":["kort punkt","..."],
-"ulemper":["kort punkt","..."]}`;
-}
-
 function parseJson(text) {
   const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
   const match = cleaned.match(/\{[\s\S]*\}/);
@@ -40,46 +25,28 @@ function parseJson(text) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const apiKey = req.headers["x-api-key"];
   if (!apiKey) return res.status(401).json({ error: "Missing API key" });
 
+  const { text } = req.body;
+  if (!text || text.trim().length < 15) return res.status(400).json({ error: "Too little text provided" });
+
   const client = new Anthropic({ apiKey });
 
-  const { text } = req.body;
-  if (!text || text.trim().length < 15) {
-    return res.status(400).json({ error: "Too little text provided" });
-  }
-
   try {
-    // Haiku extracts all structured fields and TG data from the full document
-    const haikusMsg = await client.messages.create({
+    const msg = await client.messages.create({
       model: "claude-haiku-4-5",
       max_tokens: 4000,
       messages: [{ role: "user", content: haikuPrompt(text) }],
     });
-    const structured = parseJson(
-      (haikusMsg.content || []).map((c) => c.text || "").join("").trim()
-    );
-
-    // Sonnet writes the qualitative assessment using structured data + brief document excerpt
-    const sonnetMsg = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 800,
-      messages: [{ role: "user", content: sonnetPrompt(structured, text.slice(0, 15000)) }],
-    });
-    const assessment = parseJson(
-      (sonnetMsg.content || []).map((c) => c.text || "").join("").trim()
-    );
-
-    res.json({ ...structured, ...assessment });
+    const structured = parseJson((msg.content || []).map((c) => c.text || "").join("").trim());
+    res.json(structured);
   } catch (e) {
     if (e.status === 401) return res.status(401).json({ error: "invalid_key" });
     if (e.status === 429) return res.status(429).json({ error: "rate_limit" });
-    console.error("Anthropic API error:", e.message);
+    console.error("Extract error:", e.message);
     res.status(500).json({ error: e.message || "Internal server error" });
   }
 }

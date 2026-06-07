@@ -35,7 +35,7 @@ export default async function handler(req, res) {
   try {
     const msg = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 800,
+      max_tokens: 1500,
       messages: [{ role: "user", content: sonnetPrompt(structured, excerpt || "") }],
     });
     const assessment = parseJson((msg.content || []).map((c) => c.text || "").join("").trim());

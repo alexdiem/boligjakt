@@ -54,7 +54,7 @@
   .field label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
   .assume .ai{display:flex;align-items:baseline;gap:6px}
   .assume input{width:90px}
-  .assume .note{font-size:12px;color:var(--ink-faint);max-width:260px;line-height:1.35;align-self:center}
+  .assume .note{font-size:12px;color:var(--ink-faint);line-height:1.45;margin-top:4px}
   .krav h2{color:var(--clay)}
   .krav select{width:auto;min-width:118px}
   #kBudsjett{width:150px}
@@ -312,12 +312,12 @@
       <h2>Mine preferanser</h2>
       <div class="field" style="flex-basis:100%">
         <label class="check-row"><input type="checkbox" id="pIgnoreKids"> Ignorer barnvennlighet i analysen</label>
-        <p class="note" style="margin-top:6px;max-width:340px">Ikke nevn lekeplass, skoler, barnerom el.l. som fordeler</p>
+        <p class="note" style="padding-left:24px">Ikke nevn lekeplass, skoler, barnerom el.l. som fordeler</p>
       </div>
       <div class="field" style="flex-basis:100%">
         <label for="pRedFlags">Røde flagg</label>
         <input id="pRedFlags" type="text" placeholder="f.eks. flatt tak, horisontaldelt tomannsbolig" style="width:100%">
-        <p class="note" style="margin-top:6px">Kommaseparert — nevnes alltid i ulemper hvis til stede</p>
+        <p class="note">Kommaseparert — nevnes alltid i ulemper hvis til stede</p>
       </div>
     </div>
   </header>

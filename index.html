@@ -229,6 +229,7 @@
   .estimate .cmt{font-size:12.5px;color:var(--ink-faint);margin-top:7px;line-height:1.45}
   .dcard-empty{padding:22px;font-size:14px;color:var(--ink-faint);font-style:italic}
 
+  .reassess-row{margin-bottom:12px}
   .check-row{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink-soft)}
   .check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--pine);cursor:pointer;flex:none}
 
@@ -656,6 +657,7 @@ async function extract(){
     if(belPrev) document.getElementById('f_uteareal').value = belPrev;
     pendingAnalysis = {};
     ANALYSIS_KEYS.forEach(k=> pendingAnalysis[k] = (parsed[k]!=null?parsed[k]:null));
+    pendingAnalysis['_excerpt'] = txt.slice(0,15000);
     document.getElementById('saveHint').textContent='Analysert — sjekk feltene og lagre boligen for å se vurderingen.';
     return true;
   }catch(e){
@@ -753,6 +755,30 @@ async function del(id){
   boliger = boliger.filter(x=>x.id!==id);
   if(editingId===id) cancelEdit();
   await saveBoliger(); render();
+}
+
+const reassessing = new Set();
+async function reassess(id){
+  const b = boliger.find(x=>x.id===id); if(!b) return;
+  const apiKey = getApiKey();
+  if(!apiKey){ alert('Lim inn Anthropic API-nøkkelen din for å re-vurdere.'); return; }
+  reassessing.add(id); renderDetails();
+  const headers = {"Content-Type":"application/json","x-api-key":apiKey};
+  try{
+    const r = await fetch("/api/assess",{ method:"POST", headers,
+      body:JSON.stringify({ structured:b, excerpt:b._excerpt||'', ignoreKids:prefs.ignoreKids, redFlags:prefs.redFlags }) });
+    if(r.status===401){ alert('Ugyldig API-nøkkel.'); return; }
+    if(r.status===429){ alert('For mange forespørsler akkurat nå — vent et minutt og prøv igjen.'); return; }
+    if(!r.ok) throw new Error('assess: status '+r.status);
+    const a = await r.json();
+    const i = boliger.findIndex(x=>x.id===id);
+    boliger[i] = {...boliger[i], vurdering:a.vurdering, fordeler:a.fordeler, ulemper:a.ulemper};
+    await saveBoliger();
+  }catch(e){
+    alert('Klarte ikke å re-vurdere: '+(e.message||e));
+  }finally{
+    reassessing.delete(id); renderDetails();
+  }
 }
 
 // ---- Computed metrics ----
@@ -1017,6 +1043,9 @@ function renderDetails(){
       html+='<div class="dcard-empty" style="padding:8px 0 0">Ingen tekstvurdering ennå — last opp salgsoppgave/takst for å få tolkning, fordeler/ulemper og TG-avvik. Sett gjerne også en uteareal-vurdering (1–5) på boligen.</div></div></div>';
       return;
     }
+    html += reassessing.has(b.id)
+      ? `<div class="reassess-row"><span class="spinner" style="display:inline-block;vertical-align:middle;margin-right:6px"></span><span style="font-size:13px;color:var(--ink-faint)">Skriver ny vurdering …</span></div>`
+      : `<div class="reassess-row"><button class="btn-ghost btn-sm" data-reassess="${b.id}">Re-vurder med gjeldende preferanser</button></div>`;
     if(b.vurdering) html+=`<div class="vurdering">${esc(b.vurdering)}</div>`;
     const pros=(b.fordeler||[]), cons=(b.ulemper||[]);
     if(pros.length||cons.length){
@@ -1043,6 +1072,7 @@ function renderDetails(){
   });
   html+='</div>';
   wrap.innerHTML=html;
+  wrap.querySelectorAll('[data-reassess]').forEach(el=>el.onclick=()=>reassess(el.dataset.reassess));
   wrap.querySelectorAll('[data-toggle]').forEach(el=>el.onclick=()=>{
     const id=el.dataset.toggle;
     if(expanded.has(id)) expanded.delete(id); else expanded.add(id);

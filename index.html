@@ -64,7 +64,7 @@
            padding-top:16px;border-top:1px dashed var(--line)}
   .rank-head{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);font-weight:700;margin-bottom:2px}
   .rank-row{display:flex;align-items:center;gap:11px;padding:9px 12px;background:var(--paper-2);
-            border:1px solid var(--line);border-radius:10px;cursor:grab;user-select:none;transition:border-color .15s,opacity .15s}
+            border:1px solid var(--line);border-radius:10px;cursor:grab;user-select:none;touch-action:none;transition:border-color .15s,opacity .15s}
   .rank-row:hover{border-color:var(--pine)}
   .rank-row.dragging{opacity:.45;cursor:grabbing}
   .rank-row .grip{color:var(--ink-faint);font-size:14px;letter-spacing:-2px;flex:none}
@@ -253,6 +253,10 @@
   @media(max-width:560px){
     .assume{gap:16px 20px}
     th,td{padding:11px 12px}
+    .rbtn{width:36px;height:36px;font-size:13px}
+    .rank-row .rp{display:none}
+    .scoreblock{gap:14px 16px;padding:14px 16px}
+    .score-bars{min-width:160px}
   }
 </style>
 </head>
@@ -309,10 +313,10 @@
       <button class="btn-ghost btn-sm" id="cancelEdit" style="display: none;">Avbryt redigering</button>
     </div>
     <div class="panel-body">
-      <div class="field" style="margin-bottom:18px">
+      <div class="field" style="margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid var(--line-soft)">
         <label for="apiKey" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:700">Anthropic API-nøkkel</label>
         <input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off">
-        <p style="font-size:12px;color:var(--ink-faint);margin-top:5px">Nøkkelen lagres kun i nettleseren din og sendes direkte til analysen — aldri lagret på server.</p>
+        <p style="font-size:12px;color:var(--ink-faint);margin-top:6px;line-height:1.45">Lagres kun i nettleseren din — aldri på server. <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--pine);text-underline-offset:2px">Hent nøkkel på console.anthropic.com →</a></p>
       </div>
       <div class="upload">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M12 18v-6"></path><path d="m9 15 3-3 3 3"></path></svg>
@@ -493,7 +497,7 @@ function buildRanking(){
   const w=weightsFromOrder();
   const wrap=document.getElementById('weights'); wrap.innerHTML='';
   const head=document.createElement('div'); head.className='rank-head';
-  head.textContent='Prioritering — viktigst øverst (dra, eller bruk pilene)';
+  head.textContent='Prioritering — viktigst øverst (dra eller bruk pilene)';
   wrap.appendChild(head);
   krav.order.forEach((key,i)=>{
     const c=CRIT.find(x=>x.key===key);
@@ -604,36 +608,23 @@ async function extract(){
   if(txt.length<15){ errEl.textContent='Lim inn litt mer tekst først.'; return; }
   const apiKey = getApiKey();
   if(!apiKey){ errEl.textContent='Lim inn Anthropic API-nøkkelen din i feltet over før du analyserer.'; return false; }
-  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Analyserer …';
-  const prompt = `Du er en erfaren norsk bolig- og takstrådgiver. Teksten under er fra én bolig og kan inneholde BÅDE salgsoppgave OG tilstandsrapport/takst. Les begge deler, tolk innholdet, og svar KUN med ren JSON (ingen forklaring, ingen markdown).
-
-Regler for tall: rene tall uten mellomrom, "kr" eller "m²" (4 500 000 -> 4500000; 3,5 -> 3.5). felleskostnader er per måned. bruksareal er BRA-i/BRA/P-rom i m². Bruk null der verdien mangler.
-
-For TG2/TG3: Tilstandsgrad fra tilstandsrapporten. TG2 = avvik som kan kreve tiltak/vedlikehold. TG3 = vesentlige avvik / strakstiltak. Ta med ALLE TG2- og TG3-funn du finner. For hvert funn: tema (kort, f.eks. "Drenering", "Bad", "Tak"), beskrivelse (kort, konkret), og kostnad_lav/kostnad_hoy i kroner. Bruk takstrapportens egne kostnadsestimater der de finnes; ellers gi et grovt anslag og forklar i estimat_kommentar at det er et grovt anslag. Sett kostnad til null kun hvis du ikke har grunnlag for å anslå.
-
-samlet_estimat = totalt anslått behov for utbedring/oppgradering (sum av de viktigste TG2/TG3-funnene), som intervall {lav, hoy}.
-
-Svar med nøyaktig denne JSON-strukturen:
-{"adresse":str,"boligtype":str,"eierform":str,"prisantydning":num,"omkostninger":num,"fellesgjeld":num,"felleskostnader":num,"bruksareal":num,"byggeaar":num,"soverom":num,"etasje":str,"energimerke":str,
-"vurdering":"2-4 setninger som tolker boligens helhetsinntrykk, standard og det viktigste en kjøper bør vite",
-"fordeler":["kort punkt", "..."],
-"ulemper":["kort punkt", "..."],
-"tg3":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
-"tg2":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
-"samlet_estimat":{"lav":num,"hoy":num},
-"estimat_kommentar":"kort om hva estimatet bygger på og usikkerhet"}
-
-Dokument(er):
-"""${txt.slice(0,150000)}"""`;
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Henter data …';
+  const headers = {"Content-Type":"application/json","x-api-key":apiKey};
+  function apiErr(res){ return res.status===401 ? 'Ugyldig API-nøkkel — sjekk at nøkkelen er riktig og prøv igjen.' : res.status===429 ? 'For mange forespørsler akkurat nå — vent et minutt og prøv igjen. Teksten er beholdt.' : null; }
   try{
-    const res = await fetch("/api/analyze",{
-      method:"POST", headers:{"Content-Type":"application/json","x-api-key":apiKey},
-      body:JSON.stringify({ text: txt })
-    });
-    if(res.status===401){ errEl.textContent='Ugyldig API-nøkkel — sjekk at nøkkelen er riktig og prøv igjen.'; return false; }
-    if(res.status===429){ errEl.textContent='For mange forespørsler akkurat nå — vent et minutt og trykk «Analyser tekst» på nytt. Teksten er beholdt.'; return false; }
-    if(!res.ok) throw new Error('status '+res.status);
-    const parsed = await res.json();
+    const r1 = await fetch("/api/extract",{ method:"POST", headers, body:JSON.stringify({ text: txt }) });
+    const e1 = apiErr(r1); if(e1){ errEl.textContent=e1; return false; }
+    if(!r1.ok) throw new Error('extract: status '+r1.status);
+    const structured = await r1.json();
+
+    btn.innerHTML='<span class="spinner"></span>Skriver vurdering …';
+
+    const r2 = await fetch("/api/assess",{ method:"POST", headers, body:JSON.stringify({ structured, excerpt: txt.slice(0,15000) }) });
+    const e2 = apiErr(r2); if(e2){ errEl.textContent=e2; return false; }
+    if(!r2.ok) throw new Error('assess: status '+r2.status);
+    const assessment = await r2.json();
+
+    const parsed = { ...structured, ...assessment };
     const belPrev = document.getElementById('f_uteareal').value;
     fillForm(parsed);
     if(belPrev) document.getElementById('f_uteareal').value = belPrev;
@@ -1083,6 +1074,33 @@ loadBoliger().then(render);
 const apiKeyEl = document.getElementById('apiKey');
 apiKeyEl.value = getApiKey();
 apiKeyEl.addEventListener('input', () => saveApiKey(apiKeyEl.value.trim()));
+
+// Touch drag for ranking rows (desktop drag already handled per-row in buildRanking)
+(function(){
+  let fromIdx = null;
+  const wrap = document.getElementById('weights');
+  wrap.addEventListener('touchstart', e => {
+    const row = e.target.closest('.rank-row');
+    if (!row || e.target.closest('.rbtns')) return;
+    fromIdx = +row.dataset.idx;
+    row.classList.add('dragging');
+  }, { passive: true });
+  wrap.addEventListener('touchmove', e => {
+    if (fromIdx === null) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const target = el && el.closest('.rank-row');
+    if (target) {
+      const toIdx = +target.dataset.idx;
+      if (toIdx !== fromIdx) { reorderRank(fromIdx, toIdx); fromIdx = toIdx; }
+    }
+  }, { passive: false });
+  wrap.addEventListener('touchend', () => {
+    wrap.querySelectorAll('.rank-row.dragging').forEach(r => r.classList.remove('dragging'));
+    fromIdx = null;
+  }, { passive: true });
+}());
 </script>
 
 

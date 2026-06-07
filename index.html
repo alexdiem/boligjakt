@@ -97,6 +97,7 @@
   .chip{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid}
   .chip.bad{color:var(--tg3);border-color:#e3c9c1;background:var(--tg3-bg)}
   .chip.good{color:var(--pro);border-color:#cdddd0;background:var(--best-bg)}
+  .chip.warn{color:var(--gold);border-color:#ddd0a0;background:#f5f0da}
 
   input,textarea,select{
     font-family:inherit;font-size:15px;color:var(--ink);background:var(--paper-2);
@@ -235,6 +236,12 @@
   .dcard-empty{padding:22px;font-size:14px;color:var(--ink-faint);font-style:italic}
 
   .reassess-row{margin-bottom:12px}
+  .form-grid textarea{min-height:72px;resize:vertical;font-size:14px}
+  .visnote{background:var(--paper-2);border:1px solid var(--line);border-radius:11px;
+           padding:14px 16px;margin-bottom:20px;font-size:14px;line-height:1.6;
+           color:var(--ink-soft);white-space:pre-wrap}
+  .visnote-lbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+               color:var(--ink-faint);font-weight:700;margin-bottom:6px}
   .check-row{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink-soft)}
   .check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--pine);cursor:pointer;flex:none}
 
@@ -430,7 +437,12 @@ const FIELDS = [
   {key:'soverom',     label:'Soverom',                type:'num'},
   {key:'etasje',      label:'Etasje',                 type:'text'},
   {key:'energimerke', label:'Energimerke',            type:'text'},
+  {key:'parkering',   label:'Parkering',              type:'text'},
+  {key:'oppussingsfond', label:'Oppussingsfond',      type:'num', suf:'kr'},
+  {key:'vedlikeholdsplan', label:'Vedlikeholdsplan',  type:'text'},
+  {key:'forretningsforer', label:'Forretningsfører',  type:'text'},
   {key:'uteareal', label:'Uteareal (1–5, din vurdering)', type:'num'},
+  {key:'visningsnotat', label:'Notater fra visning',  type:'text', multiline:true},
 ];
 
 window.storage = {
@@ -444,7 +456,8 @@ function saveApiKey(v){ if(v) localStorage.setItem('husjakt:apiKey', v); else lo
 let boliger = [];
 let editingId = null;
 let expanded = new Set();
-const ANALYSIS_KEYS = ['vurdering','fordeler','ulemper','tg2','tg3','samlet_estimat','estimat_kommentar'];
+const ANALYSIS_KEYS = ['vurdering','fordeler','ulemper','tg2','tg3','samlet_estimat','estimat_kommentar',
+                       'parkering','oppussingsfond','vedlikeholdsplan','forretningsforer'];
 let pendingAnalysis = null;
 // Defaults reflect the user's stated priorities: size > location > condition > price,
 // strict budget cap, zero tolerance for TG3. Weighting is derived from this ranking.
@@ -611,6 +624,9 @@ function buildForm(){
       const inp=document.createElement('input'); inp.id='f_'+f.key; inp.type='number'; inp.step='any';
       const s=document.createElement('span'); s.textContent=f.suf;
       w.appendChild(inp); w.appendChild(s); d.appendChild(w);
+    }else if(f.multiline){
+      const ta=document.createElement('textarea'); ta.id='f_'+f.key;
+      d.appendChild(ta);
     }else{
       const inp=document.createElement('input'); inp.id='f_'+f.key; inp.type=f.type==='num'?'number':'text';
       d.appendChild(inp);
@@ -661,8 +677,10 @@ async function extract(){
 
     const parsed = { ...structured, ...assessment };
     const belPrev = document.getElementById('f_uteareal').value;
+    const notePrev = document.getElementById('f_visningsnotat').value;
     fillForm(parsed);
     if(belPrev) document.getElementById('f_uteareal').value = belPrev;
+    if(notePrev) document.getElementById('f_visningsnotat').value = notePrev;
     pendingAnalysis = {};
     ANALYSIS_KEYS.forEach(k=> pendingAnalysis[k] = (parsed[k]!=null?parsed[k]:null));
     pendingAnalysis['_excerpt'] = txt.slice(0,15000);
@@ -881,6 +899,24 @@ function scoreFor(b){
   if(krav.minSov && b.soverom!=null && b.soverom<+krav.minSov) notes.push({t:'Færre soverom enn ønsket',k:'bad'});
   if(b.bruksareal && krav.minBra && b.bruksareal>=+krav.minBra*1.2) notes.push({t:'Romslig',k:'good'});
 
+  // Byggeår risk — 1960–1985 era: asbestos, poor insulation, flat roofs
+  if(b.byggeaar && b.byggeaar >= 1960 && b.byggeaar <= 1985){
+    pct -= 5;
+    notes.push({t:'Risikoperiode ('+b.byggeaar+')', k:'warn'});
+  }
+
+  // Sameie/borettslag: warn on low or unknown reserve fund
+  const isSameie = b.eierform && /sameie|borettslag|andel/i.test(b.eierform);
+  if(isSameie){
+    if(b.oppussingsfond != null && b.oppussingsfond < 50000){
+      pct -= 5;
+      notes.push({t:'Lavt oppussingsfond', k:'warn'});
+    } else if(b.oppussingsfond == null){
+      notes.push({t:'Fond ikke oppgitt', k:'warn'});
+    }
+    if(b.vedlikeholdsplan === 'Nei') notes.push({t:'Ingen vedlikeholdsplan', k:'warn'});
+  }
+
   // Red flag penalty: search all available text fields for each flag term
   if(prefs.redFlags && prefs.redFlags.trim()){
     const flags=prefs.redFlags.split(',').map(f=>f.trim().toLowerCase()).filter(Boolean);
@@ -929,6 +965,11 @@ const ROWS = [
   {label:'Byggeår',       get:b=>b.byggeaar,      fmt:n=>n==null?null:String(n), higher:true},
   {label:'Etasje',        get:b=>b.etasje,        fmt:v=>v},
   {label:'Energimerke',   get:b=>b.energimerke,   fmt:v=>v},
+  {label:'Parkering',     get:b=>b.parkering,     fmt:v=>v},
+  {section:'Sameie og økonomi'},
+  {label:'Oppussingsfond',get:b=>b.oppussingsfond,fmt:fmtKr, higher:true, badge:true},
+  {label:'Vedlikeholdsplan',get:b=>b.vedlikeholdsplan,fmt:v=>v},
+  {label:'Forretningsfører',get:b=>b.forretningsforer,fmt:v=>v},
   {section:'Tilstand & kostnad'},
   {label:'TG3-avvik (alvorlige)', get:tg3Count, fmt:n=>n+(n===1?' avvik':' avvik'), lower:true, badge:true},
   {label:'TG2-avvik',     get:tg2Count, fmt:n=>n+' avvik', lower:true},
@@ -1047,6 +1088,9 @@ function renderDetails(){
           `<span class="meta">${esc([b.boligtype,b.eierform,b.bruksareal?b.bruksareal+' m²':null,b.byggeaar].filter(Boolean).join(' · '))}</span></span>`+
           `${pill}</div>`;
     html+='<div class="dcard-body">';
+    if(b.visningsnotat && b.visningsnotat.trim()){
+      html+=`<div class="visnote-lbl">Notater fra visning</div><div class="visnote">${esc(b.visningsnotat.trim())}</div>`;
+    }
     if(sc.enough){
       html+='<div class="scoreblock">';
       html+=`<div class="score-main"><div class="score-pct" style="color:${sc.band.color}">${sc.pct}%</div>`+

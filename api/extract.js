@@ -7,8 +7,13 @@ Regler for tall: rene tall uten mellomrom, "kr" eller "m²" (4 500 000 -> 450000
 
 For TG2/TG3: Ta med ALLE TG2- og TG3-funn fra tilstandsrapporten. For hvert funn: tema (kort), beskrivelse (kort, konkret), kostnad_lav/kostnad_hoy i kroner. Bruk takstrapportens egne kostnadsestimater; ellers gi et grovt anslag. samlet_estimat = totalt anslått utbedringskostnad som intervall {lav, hoy}.
 
+For sameie/borettslag: oppussingsfond = samlet fond i regnskapet (kr, null hvis ikke oppgitt). vedlikeholdsplan = "Ja", "Nei", eller null. forretningsforer = navn på forretningsfører/forvaltningsselskap, null hvis ikke nevnt.
+
+parkering: kort beskrivelse (f.eks. "Garasjeplass inkludert", "Leieplass tilgjengelig", "Ingen parkering"), null hvis ikke nevnt.
+
 Svar med nøyaktig denne JSON-strukturen:
 {"adresse":str,"boligtype":str,"eierform":str,"prisantydning":num,"omkostninger":num,"fellesgjeld":num,"felleskostnader":num,"bruksareal":num,"byggeaar":num,"soverom":num,"etasje":str,"energimerke":str,
+"parkering":str,"oppussingsfond":num,"vedlikeholdsplan":str,"forretningsforer":str,
 "tg3":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
 "tg2":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
 "samlet_estimat":{"lav":num,"hoy":num},

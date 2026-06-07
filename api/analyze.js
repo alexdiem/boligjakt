@@ -1,7 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const client = new Anthropic();
-
 function haikuPrompt(text) {
   return `Du er en norsk boligekspert. Ekstraher strukturerte data fra dette boligdokumentet og svar KUN med ren JSON (ingen forklaring, ingen markdown).
 
@@ -46,6 +44,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const apiKey = req.headers["x-api-key"];
+  if (!apiKey) return res.status(401).json({ error: "Missing API key" });
+
+  const client = new Anthropic({ apiKey });
+
   const { text } = req.body;
   if (!text || text.trim().length < 15) {
     return res.status(400).json({ error: "Too little text provided" });
@@ -74,9 +77,8 @@ export default async function handler(req, res) {
 
     res.json({ ...structured, ...assessment });
   } catch (e) {
-    if (e.status === 429) {
-      return res.status(429).json({ error: "rate_limit" });
-    }
+    if (e.status === 401) return res.status(401).json({ error: "invalid_key" });
+    if (e.status === 429) return res.status(429).json({ error: "rate_limit" });
     console.error("Anthropic API error:", e.message);
     res.status(500).json({ error: e.message || "Internal server error" });
   }

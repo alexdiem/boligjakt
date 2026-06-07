@@ -309,6 +309,11 @@
       <button class="btn-ghost btn-sm" id="cancelEdit" style="display: none;">Avbryt redigering</button>
     </div>
     <div class="panel-body">
+      <div class="field" style="margin-bottom:18px">
+        <label for="apiKey" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:700">Anthropic API-nøkkel</label>
+        <input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off">
+        <p style="font-size:12px;color:var(--ink-faint);margin-top:5px">Nøkkelen lagres kun i nettleseren din og sendes direkte til analysen — aldri lagret på server.</p>
+      </div>
       <div class="upload">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M12 18v-6"></path><path d="m9 15 3-3 3 3"></path></svg>
         <div class="txt">
@@ -403,6 +408,9 @@ window.storage = {
   get: (key) => Promise.resolve(localStorage.getItem(key) != null ? { value: localStorage.getItem(key) } : null),
   set: (key, value) => { localStorage.setItem(key, value); return Promise.resolve(); },
 };
+
+function getApiKey(){ return localStorage.getItem('husjakt:apiKey') || ''; }
+function saveApiKey(v){ if(v) localStorage.setItem('husjakt:apiKey', v); else localStorage.removeItem('husjakt:apiKey'); }
 
 let boliger = [];
 let editingId = null;
@@ -594,6 +602,8 @@ async function extract(){
   const btn = document.getElementById('extractBtn');
   errEl.textContent='';
   if(txt.length<15){ errEl.textContent='Lim inn litt mer tekst først.'; return; }
+  const apiKey = getApiKey();
+  if(!apiKey){ errEl.textContent='Lim inn Anthropic API-nøkkelen din i feltet over før du analyserer.'; return false; }
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Analyserer …';
   const prompt = `Du er en erfaren norsk bolig- og takstrådgiver. Teksten under er fra én bolig og kan inneholde BÅDE salgsoppgave OG tilstandsrapport/takst. Les begge deler, tolk innholdet, og svar KUN med ren JSON (ingen forklaring, ingen markdown).
 
@@ -617,9 +627,10 @@ Dokument(er):
 """${txt.slice(0,150000)}"""`;
   try{
     const res = await fetch("/api/analyze",{
-      method:"POST", headers:{"Content-Type":"application/json"},
+      method:"POST", headers:{"Content-Type":"application/json","x-api-key":apiKey},
       body:JSON.stringify({ text: txt })
     });
+    if(res.status===401){ errEl.textContent='Ugyldig API-nøkkel — sjekk at nøkkelen er riktig og prøv igjen.'; return false; }
     if(res.status===429){ errEl.textContent='For mange forespørsler akkurat nå — vent et minutt og trykk «Analyser tekst» på nytt. Teksten er beholdt.'; return false; }
     if(!res.ok) throw new Error('status '+res.status);
     const parsed = await res.json();
@@ -1067,6 +1078,11 @@ bindKrav('kTg3','tg3tol',false);
 buildForm();
 loadKrav();
 loadBoliger().then(render);
+
+// API key: load from storage and persist on change
+const apiKeyEl = document.getElementById('apiKey');
+apiKeyEl.value = getApiKey();
+apiKeyEl.addEventListener('input', () => saveApiKey(apiKeyEl.value.trim()));
 </script>
 
 

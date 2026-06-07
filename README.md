@@ -1,5 +1,7 @@
 # Husjakt
 
+**Live app: [boligjakt.vercel.app](https://boligjakt.vercel.app)**
+
 Compare Norwegian properties side by side. Upload a salgsoppgave and tilstandsrapport (PDF), and the app extracts key facts, TG2/TG3 defects with cost estimates, and an AI-generated assessment — then ranks all your properties against each other.
 
 ![Husjakt screenshot](https://github.com/alexdiem/boligjakt/raw/main/screenshot.png)

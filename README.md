@@ -1,0 +1,61 @@
+# Husjakt
+
+Compare Norwegian properties side by side. Upload a salgsoppgave and tilstandsrapport (PDF), and the app extracts key facts, TG2/TG3 defects with cost estimates, and an AI-generated assessment — then ranks all your properties against each other.
+
+![Husjakt screenshot](https://github.com/alexdiem/boligjakt/raw/main/screenshot.png)
+
+## Features
+
+- **PDF analysis** — upload salgsoppgave + tilstandsrapport, text is extracted in the browser
+- **AI extraction** — price, size, year built, energy rating, TG2/TG3 items with cost estimates
+- **Qualitative assessment** — summary, pros, cons written by Claude Sonnet
+- **Side-by-side comparison** — sortable table with best-value highlighting
+- **Scoring** — weighted ranking by size, outdoor area, condition, and price
+- **Persistent storage** — all properties saved in your browser's localStorage
+- **BYO API key** — you supply your own Anthropic key; nothing is stored server-side
+
+## How it works
+
+The analysis runs in two steps to keep costs low:
+
+1. **Claude Haiku** reads the full document and extracts structured data (price, TG items, cost estimates, etc.)
+2. **Claude Sonnet** reads the structured output and a short document excerpt to write the qualitative assessment
+
+Typical cost: ~$0.04–0.06 per property analysis.
+
+## Getting started
+
+### Deploy to Vercel (recommended)
+
+1. Fork or clone this repo
+2. Import at [vercel.com/new](https://vercel.com/new)
+3. No environment variables needed — users supply their own Anthropic API key in the app
+
+### Run locally
+
+```bash
+npm install -g vercel
+npm install
+vercel dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Using the app
+
+1. Enter your [Anthropic API key](https://console.anthropic.com/settings/keys) (`sk-ant-…`) in the input at the top of the form — it's stored only in your browser
+2. Upload one or more PDFs (salgsoppgave + tilstandsrapport) per property, or paste the text directly
+3. Click **Analyser tekst** — fields are filled automatically
+4. Adjust any fields if needed, then click **Lagre bolig**
+5. Repeat for each property you want to compare
+
+## Tech stack
+
+- Vanilla HTML/CSS/JS — no framework, single file frontend
+- [pdf.js](https://mozilla.github.io/pdf.js/) for client-side PDF text extraction
+- [Anthropic SDK](https://github.com/anthropic-ai/anthropic-sdk-typescript) on a Vercel serverless function
+- Vercel for hosting
+
+## License
+
+MIT

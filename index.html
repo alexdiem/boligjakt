@@ -881,6 +881,25 @@ function scoreFor(b){
   if(krav.minSov && b.soverom!=null && b.soverom<+krav.minSov) notes.push({t:'Færre soverom enn ønsket',k:'bad'});
   if(b.bruksareal && krav.minBra && b.bruksareal>=+krav.minBra*1.2) notes.push({t:'Romslig',k:'good'});
 
+  // Red flag penalty: search all available text fields for each flag term
+  if(prefs.redFlags && prefs.redFlags.trim()){
+    const flags=prefs.redFlags.split(',').map(f=>f.trim().toLowerCase()).filter(Boolean);
+    if(flags.length){
+      const searchText=[
+        b.boligtype, b.eierform, b.adresse,
+        ...(b.tg3||[]).flatMap(it=>[it.tema, it.beskrivelse]),
+        ...(b.tg2||[]).flatMap(it=>[it.tema, it.beskrivelse]),
+        b.vurdering,
+        ...(b.ulemper||[]),
+      ].filter(Boolean).join(' ').toLowerCase();
+      const matched=flags.filter(f=>searchText.includes(f));
+      if(matched.length){
+        pct-=Math.min(35, matched.length*15);
+        notes.push({t:matched.length===1?`Rødt flagg: ${matched[0]}`:`${matched.length} røde flagg`,k:'bad'});
+      }
+    }
+  }
+
   pct=clamp(Math.round(pct),0,100);
   const enough=(tp!=null || b.bruksareal!=null || hasAnalysis(b));
   return {pct, band:band(pct), notes, enough,

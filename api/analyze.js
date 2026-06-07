@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     // Haiku extracts all structured fields and TG data from the full document
     const haikusMsg = await client.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 2000,
+      max_tokens: 4000,
       messages: [{ role: "user", content: haikuPrompt(text) }],
     });
     const structured = parseJson(

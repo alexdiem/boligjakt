@@ -1,8 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-function sonnetPrompt(structured, textExcerpt) {
-  return `Du er en erfaren norsk bolig- og takstrådgiver. Basert på de strukturerte dataene og dokumentutdraget under, skriv en kvalitativ vurdering av boligen. Svar KUN med ren JSON (ingen forklaring, ingen markdown).
+function sonnetPrompt(structured, textExcerpt, { ignoreKids, redFlags } = {}) {
+  const extras = [
+    ignoreKids && 'Ikke nevn barnvennlighet, lekeplasser, skoler, barnerom eller familieegnethet — verken i vurderingen, fordeler eller ulemper.',
+    redFlags && redFlags.trim() && `Følgende er røde flagg for kjøperen og skal alltid nevnes i ulemper dersom de er til stede i boligen: ${redFlags.trim()}.`,
+  ].filter(Boolean).join('\n');
 
+  return `Du er en erfaren norsk bolig- og takstrådgiver. Basert på de strukturerte dataene og dokumentutdraget under, skriv en kvalitativ vurdering av boligen. Svar KUN med ren JSON (ingen forklaring, ingen markdown).
+${extras ? `\nPersonlige instruksjoner fra kjøperen:\n${extras}\n` : ''}
 Strukturerte data:
 ${JSON.stringify(structured, null, 2)}
 
@@ -27,7 +32,7 @@ export default async function handler(req, res) {
   const apiKey = req.headers["x-api-key"];
   if (!apiKey) return res.status(401).json({ error: "Missing API key" });
 
-  const { structured, excerpt } = req.body;
+  const { structured, excerpt, ignoreKids, redFlags } = req.body;
   if (!structured) return res.status(400).json({ error: "Missing structured data" });
 
   const client = new Anthropic({ apiKey });
@@ -36,7 +41,7 @@ export default async function handler(req, res) {
     const msg = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 1500,
-      messages: [{ role: "user", content: sonnetPrompt(structured, excerpt || "") }],
+      messages: [{ role: "user", content: sonnetPrompt(structured, excerpt || "", { ignoreKids, redFlags }) }],
     });
     const assessment = parseJson((msg.content || []).map((c) => c.text || "").join("").trim());
     res.json(assessment);

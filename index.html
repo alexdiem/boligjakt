@@ -54,7 +54,7 @@
   .field label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:700}
   .assume .ai{display:flex;align-items:baseline;gap:6px}
   .assume input{width:90px}
-  .assume .note{font-size:12px;color:var(--ink-faint);max-width:260px;line-height:1.35;align-self:center}
+  .assume .note{font-size:12px;color:var(--ink-faint);line-height:1.45;margin-top:4px}
   .krav h2{color:var(--clay)}
   .krav select{width:auto;min-width:118px}
   #kBudsjett{width:150px}
@@ -229,6 +229,9 @@
   .estimate .cmt{font-size:12.5px;color:var(--ink-faint);margin-top:7px;line-height:1.45}
   .dcard-empty{padding:22px;font-size:14px;color:var(--ink-faint);font-style:italic}
 
+  .check-row{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink-soft)}
+  .check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--pine);cursor:pointer;flex:none}
+
   @media(max-width:560px){ .pc{grid-template-columns:1fr;gap:14px} }
 
   footer{margin-top:30px;font-size:12px;color:var(--ink-faint);line-height:1.6;max-width:760px}
@@ -303,6 +306,19 @@
         <select id="kTg3"><option value="avoid">Unngå helt</option><option value="comp">OK m/ kompensasjon</option><option value="ok">Greit</option></select>
       </div>
       <div class="weights" id="weights"><div class="rank-head">Prioritering — viktigst øverst (dra, eller bruk pilene)</div><div class="rank-row" draggable="true" data-idx="0"><span class="grip">⠿</span><span class="rk">1</span><span class="rl">Størrelse og planløsning</span><span class="rp">40%</span><span class="rbtns"><button class="rbtn" data-up="0" disabled="" title="Flytt opp">▲</button><button class="rbtn" data-down="0" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="1"><span class="grip">⠿</span><span class="rk">2</span><span class="rl">Uteareal</span><span class="rp">30%</span><span class="rbtns"><button class="rbtn" data-up="1" title="Flytt opp">▲</button><button class="rbtn" data-down="1" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="2"><span class="grip">⠿</span><span class="rk">3</span><span class="rl">Standard og tilstand</span><span class="rp">20%</span><span class="rbtns"><button class="rbtn" data-up="2" title="Flytt opp">▲</button><button class="rbtn" data-down="2" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="3"><span class="grip">⠿</span><span class="rk">4</span><span class="rl">Pris og økonomi</span><span class="rp">10%</span><span class="rbtns"><button class="rbtn" data-up="3" title="Flytt opp">▲</button><button class="rbtn" data-down="3" disabled="" title="Flytt ned">▼</button></span></div></div>
+    </div>
+
+    <div class="assume">
+      <h2>Mine preferanser</h2>
+      <div class="field" style="flex-basis:100%">
+        <label class="check-row"><input type="checkbox" id="pIgnoreKids"> Ignorer barnvennlighet i analysen</label>
+        <p class="note" style="padding-left:24px">Ikke nevn lekeplass, skoler, barnerom el.l. som fordeler</p>
+      </div>
+      <div class="field" style="flex-basis:100%">
+        <label for="pRedFlags">Røde flagg</label>
+        <input id="pRedFlags" type="text" placeholder="f.eks. flatt tak, horisontaldelt tomannsbolig" style="width:100%">
+        <p class="note">Kommaseparert — nevnes alltid i ulemper hvis til stede</p>
+      </div>
     </div>
   </header>
 
@@ -425,6 +441,7 @@ let pendingAnalysis = null;
 // strict budget cap, zero tolerance for TG3. Weighting is derived from this ranking.
 let krav = { budsjett:null, streng:1, minBra:null, minSov:null, tg3tol:'avoid',
              order:['size','uteareal','cond','price'] };
+let prefs = { ignoreKids:false, redFlags:'' };
 const CRIT = [
   {key:'size', label:'Størrelse og planløsning'},
   {key:'uteareal', label:'Uteareal'},
@@ -474,6 +491,15 @@ async function loadKrav(){
   try{ const r=await window.storage.get('husjakt:krav');
     if(r && r.value) krav={...krav, ...JSON.parse(r.value)}; }catch(e){}
   applyKravToInputs();
+}
+async function savePrefs(){
+  try{ await window.storage.set('husjakt:prefs', JSON.stringify(prefs)); }catch(e){}
+}
+async function loadPrefs(){
+  try{ const r=await window.storage.get('husjakt:prefs');
+    if(r && r.value) prefs={...prefs, ...JSON.parse(r.value)}; }catch(e){}
+  document.getElementById('pIgnoreKids').checked = !!prefs.ignoreKids;
+  document.getElementById('pRedFlags').value = prefs.redFlags||'';
 }
 function applyKravToInputs(){
   document.getElementById('kBudsjett').value = krav.budsjett ?? '';
@@ -619,7 +645,7 @@ async function extract(){
 
     btn.innerHTML='<span class="spinner"></span>Skriver vurdering …';
 
-    const r2 = await fetch("/api/assess",{ method:"POST", headers, body:JSON.stringify({ structured, excerpt: txt.slice(0,15000) }) });
+    const r2 = await fetch("/api/assess",{ method:"POST", headers, body:JSON.stringify({ structured, excerpt: txt.slice(0,15000), ignoreKids: prefs.ignoreKids, redFlags: prefs.redFlags }) });
     const e2 = apiErr(r2); if(e2){ errEl.textContent=e2; return false; }
     if(!r2.ok) throw new Error('assess: status '+r2.status);
     const assessment = await r2.json();
@@ -1068,7 +1094,11 @@ bindKrav('kTg3','tg3tol',false);
 
 buildForm();
 loadKrav();
+loadPrefs();
 loadBoliger().then(render);
+
+document.getElementById('pIgnoreKids').addEventListener('change', e => { prefs.ignoreKids = e.target.checked; savePrefs(); });
+document.getElementById('pRedFlags').addEventListener('input', e => { prefs.redFlags = e.target.value; savePrefs(); });
 
 // API key: load from storage and persist on change
 const apiKeyEl = document.getElementById('apiKey');

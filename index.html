@@ -300,6 +300,15 @@
       </div>
       <div class="weights" id="weights"><div class="rank-head">Prioritering — viktigst øverst (dra, eller bruk pilene)</div><div class="rank-row" draggable="true" data-idx="0"><span class="grip">⠿</span><span class="rk">1</span><span class="rl">Størrelse og planløsning</span><span class="rp">40%</span><span class="rbtns"><button class="rbtn" data-up="0" disabled="" title="Flytt opp">▲</button><button class="rbtn" data-down="0" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="1"><span class="grip">⠿</span><span class="rk">2</span><span class="rl">Uteareal</span><span class="rp">30%</span><span class="rbtns"><button class="rbtn" data-up="1" title="Flytt opp">▲</button><button class="rbtn" data-down="1" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="2"><span class="grip">⠿</span><span class="rk">3</span><span class="rl">Standard og tilstand</span><span class="rp">20%</span><span class="rbtns"><button class="rbtn" data-up="2" title="Flytt opp">▲</button><button class="rbtn" data-down="2" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="3"><span class="grip">⠿</span><span class="rk">4</span><span class="rl">Pris og økonomi</span><span class="rp">10%</span><span class="rbtns"><button class="rbtn" data-up="3" title="Flytt opp">▲</button><button class="rbtn" data-down="3" disabled="" title="Flytt ned">▼</button></span></div></div>
     </div>
+
+    <div class="assume">
+      <h2>API-nøkkel</h2>
+      <div class="field" style="flex:1;min-width:260px">
+        <label for="apiKey">Anthropic API-nøkkel</label>
+        <input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off" style="width:100%">
+      </div>
+      <p class="note">Nøkkelen lagres kun i nettleseren din og sendes direkte til analysen — aldri lagret på server.</p>
+    </div>
   </header>
 
   <!-- Input panel -->
@@ -403,6 +412,9 @@ window.storage = {
   get: (key) => Promise.resolve(localStorage.getItem(key) != null ? { value: localStorage.getItem(key) } : null),
   set: (key, value) => { localStorage.setItem(key, value); return Promise.resolve(); },
 };
+
+function getApiKey(){ return localStorage.getItem('husjakt:apiKey') || ''; }
+function saveApiKey(v){ if(v) localStorage.setItem('husjakt:apiKey', v); else localStorage.removeItem('husjakt:apiKey'); }
 
 let boliger = [];
 let editingId = null;
@@ -615,11 +627,14 @@ Svar med nøyaktig denne JSON-strukturen:
 
 Dokument(er):
 """${txt.slice(0,150000)}"""`;
+  const apiKey = getApiKey();
+  if(!apiKey){ errEl.textContent='Lim inn Anthropic API-nøkkelen din i feltet øverst på siden før du analyserer.'; return false; }
   try{
     const res = await fetch("/api/analyze",{
-      method:"POST", headers:{"Content-Type":"application/json"},
+      method:"POST", headers:{"Content-Type":"application/json","x-api-key":apiKey},
       body:JSON.stringify({ text: txt })
     });
+    if(res.status===401){ errEl.textContent='Ugyldig API-nøkkel — sjekk at nøkkelen er riktig og prøv igjen.'; return false; }
     if(res.status===429){ errEl.textContent='For mange forespørsler akkurat nå — vent et minutt og trykk «Analyser tekst» på nytt. Teksten er beholdt.'; return false; }
     if(!res.ok) throw new Error('status '+res.status);
     const parsed = await res.json();
@@ -1067,6 +1082,11 @@ bindKrav('kTg3','tg3tol',false);
 buildForm();
 loadKrav();
 loadBoliger().then(render);
+
+// API key: load from storage and persist on change
+const apiKeyEl = document.getElementById('apiKey');
+apiKeyEl.value = getApiKey();
+apiKeyEl.addEventListener('input', () => saveApiKey(apiKeyEl.value.trim()));
 </script>
 
 

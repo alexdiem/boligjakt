@@ -300,15 +300,6 @@
       </div>
       <div class="weights" id="weights"><div class="rank-head">Prioritering — viktigst øverst (dra, eller bruk pilene)</div><div class="rank-row" draggable="true" data-idx="0"><span class="grip">⠿</span><span class="rk">1</span><span class="rl">Størrelse og planløsning</span><span class="rp">40%</span><span class="rbtns"><button class="rbtn" data-up="0" disabled="" title="Flytt opp">▲</button><button class="rbtn" data-down="0" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="1"><span class="grip">⠿</span><span class="rk">2</span><span class="rl">Uteareal</span><span class="rp">30%</span><span class="rbtns"><button class="rbtn" data-up="1" title="Flytt opp">▲</button><button class="rbtn" data-down="1" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="2"><span class="grip">⠿</span><span class="rk">3</span><span class="rl">Standard og tilstand</span><span class="rp">20%</span><span class="rbtns"><button class="rbtn" data-up="2" title="Flytt opp">▲</button><button class="rbtn" data-down="2" title="Flytt ned">▼</button></span></div><div class="rank-row" draggable="true" data-idx="3"><span class="grip">⠿</span><span class="rk">4</span><span class="rl">Pris og økonomi</span><span class="rp">10%</span><span class="rbtns"><button class="rbtn" data-up="3" title="Flytt opp">▲</button><button class="rbtn" data-down="3" disabled="" title="Flytt ned">▼</button></span></div></div>
     </div>
-
-    <div class="assume">
-      <h2>API-nøkkel</h2>
-      <div class="field" style="flex:1;min-width:260px">
-        <label for="apiKey">Anthropic API-nøkkel</label>
-        <input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off" style="width:100%">
-      </div>
-      <p class="note">Nøkkelen lagres kun i nettleseren din og sendes direkte til analysen — aldri lagret på server.</p>
-    </div>
   </header>
 
   <!-- Input panel -->
@@ -318,6 +309,11 @@
       <button class="btn-ghost btn-sm" id="cancelEdit" style="display: none;">Avbryt redigering</button>
     </div>
     <div class="panel-body">
+      <div class="field" style="margin-bottom:18px">
+        <label for="apiKey" style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);font-weight:700">Anthropic API-nøkkel</label>
+        <input id="apiKey" type="password" placeholder="sk-ant-…" autocomplete="off">
+        <p style="font-size:12px;color:var(--ink-faint);margin-top:5px">Nøkkelen lagres kun i nettleseren din og sendes direkte til analysen — aldri lagret på server.</p>
+      </div>
       <div class="upload">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path><path d="M12 18v-6"></path><path d="m9 15 3-3 3 3"></path></svg>
         <div class="txt">
@@ -607,7 +603,7 @@ async function extract(){
   errEl.textContent='';
   if(txt.length<15){ errEl.textContent='Lim inn litt mer tekst først.'; return; }
   const apiKey = getApiKey();
-  if(!apiKey){ errEl.textContent='Lim inn Anthropic API-nøkkelen din i feltet øverst på siden før du analyserer.'; return false; }
+  if(!apiKey){ errEl.textContent='Lim inn Anthropic API-nøkkelen din i feltet over før du analyserer.'; return false; }
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Analyserer …';
   const prompt = `Du er en erfaren norsk bolig- og takstrådgiver. Teksten under er fra én bolig og kan inneholde BÅDE salgsoppgave OG tilstandsrapport/takst. Les begge deler, tolk innholdet, og svar KUN med ren JSON (ingen forklaring, ingen markdown).
 

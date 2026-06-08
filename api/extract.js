@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { parseJson } from "./_utils.js";
 
 function haikuPrompt(text) {
   return `Du er en norsk boligekspert. Ekstraher strukturerte data fra dette boligdokumentet og svar KUN med ren JSON (ingen forklaring, ingen markdown).
@@ -20,13 +21,7 @@ Svar med nøyaktig denne JSON-strukturen:
 "estimat_kommentar":"kort om hva estimatet bygger på og usikkerhet"}
 
 Dokument:
-"""${text.slice(0, 80000)}"""`;
-}
-
-function parseJson(text) {
-  const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  return JSON.parse(match ? match[0] : cleaned);
+"""${text.slice(0, 120000)}"""`;
 }
 
 export default async function handler(req, res) {

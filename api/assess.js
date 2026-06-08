@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { parseJson } from "./_utils.js";
 
 function sonnetPrompt(structured, textExcerpt, { ignoreKids, redFlags } = {}) {
   const extras = [
@@ -18,12 +19,6 @@ Svar med nøyaktig denne JSON-strukturen:
 {"vurdering":"2-4 setninger som tolker boligens helhetsinntrykk, standard og det viktigste en kjøper bør vite",
 "fordeler":["kort punkt","..."],
 "ulemper":["kort punkt","..."]}`;
-}
-
-function parseJson(text) {
-  const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-  const match = cleaned.match(/\{[\s\S]*\}/);
-  return JSON.parse(match ? match[0] : cleaned);
 }
 
 export default async function handler(req, res) {

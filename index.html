@@ -456,8 +456,7 @@ function saveApiKey(v){ if(v) localStorage.setItem('husjakt:apiKey', v); else lo
 let boliger = [];
 let editingId = null;
 let expanded = new Set();
-const ANALYSIS_KEYS = ['vurdering','fordeler','ulemper','tg2','tg3','samlet_estimat','estimat_kommentar',
-                       'parkering','oppussingsfond','vedlikeholdsplan','forretningsforer'];
+const ANALYSIS_KEYS = ['vurdering','fordeler','ulemper','tg2','tg3','samlet_estimat','estimat_kommentar'];
 let pendingAnalysis = null;
 // Defaults reflect the user's stated priorities: size > location > condition > price,
 // strict budget cap, zero tolerance for TG3. Weighting is derived from this ranking.

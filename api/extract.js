@@ -7,9 +7,9 @@ Regler for tall: rene tall uten mellomrom, "kr" eller "m²" (4 500 000 -> 450000
 
 For TG2/TG3: Ta med ALLE TG2- og TG3-funn fra tilstandsrapporten. For hvert funn: tema (kort), beskrivelse (kort, konkret), kostnad_lav/kostnad_hoy i kroner. Bruk takstrapportens egne kostnadsestimater; ellers gi et grovt anslag. samlet_estimat = totalt anslått utbedringskostnad som intervall {lav, hoy}.
 
-For sameie/borettslag: oppussingsfond = samlet fond i regnskapet (kr, null hvis ikke oppgitt). vedlikeholdsplan = "Ja", "Nei", eller null. forretningsforer = navn på forretningsfører/forvaltningsselskap, null hvis ikke nevnt.
+For sameie/borettslag: oppussingsfond = samlet vedlikeholdsfond/oppussingsfond/driftsfond i sameiets eller borettslagets regnskap (kr, null hvis beløpet ikke er oppgitt). vedlikeholdsplan = "Ja" hvis sameiet/borettslaget har en vedlikeholdsplan, "Nei" hvis det eksplisitt sies at det ikke finnes, null ellers. forretningsforer = navn på forretningsfører eller forvaltningsselskap (f.eks. OBOS Eiendomsforvaltning, USBL, Storbymegler), null hvis ikke nevnt.
 
-parkering: kort beskrivelse (f.eks. "Garasjeplass inkludert", "Leieplass tilgjengelig", "Ingen parkering"), null hvis ikke nevnt.
+parkering: kort beskrivelse av parkeringsmuligheter (f.eks. "Garasjeplass inkludert", "Leieplass i garasje tilgjengelig", "Beboerparkering i gate", "Ingen parkering"), null hvis ikke nevnt.
 
 Svar med nøyaktig denne JSON-strukturen:
 {"adresse":str,"boligtype":str,"eierform":str,"prisantydning":num,"omkostninger":num,"fellesgjeld":num,"felleskostnader":num,"bruksareal":num,"byggeaar":num,"soverom":num,"etasje":str,"energimerke":str,
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
   try {
     const msg = await client.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 4000,
+      max_tokens: 5000,
       messages: [{ role: "user", content: haikuPrompt(text) }],
     });
     const structured = parseJson((msg.content || []).map((c) => c.text || "").join("").trim());

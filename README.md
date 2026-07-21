@@ -12,7 +12,8 @@ Compare Norwegian properties side by side. Upload a salgsoppgave and tilstandsra
 - **Side-by-side comparison** — sortable table with best-value highlighting
 - **Scoring** — weighted ranking by size, outdoor area, condition, and price
 - **Persistent storage** — all properties saved in your browser's localStorage
-- **BYO API key** — you supply your own Anthropic key; nothing is stored server-side
+- **Partner sync** — share a secret code with the person you're house-hunting with and keep properties, requirements, and preferences in sync automatically (optional, requires a free Upstash Redis database)
+- **BYO API key** — you supply your own Anthropic key; keys are never stored server-side
 
 ## How it works
 
@@ -30,6 +31,18 @@ Typical cost: ~$0.04–0.06 per property analysis.
 1. Fork or clone this repo
 2. Import at [vercel.com/new](https://vercel.com/new)
 3. No environment variables needed — users supply their own Anthropic API key in the app
+
+### Enable partner sync (optional)
+
+Partner sync needs a small key-value database. On the free tier this costs nothing:
+
+1. In your Vercel project, go to **Storage → Create Database → Upstash for Redis** (or add the [Upstash integration](https://vercel.com/marketplace/upstash) from the marketplace)
+2. Connect it to the project — Vercel adds the `KV_REST_API_URL`/`KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`) environment variables automatically
+3. Redeploy
+
+Without a database the app works exactly as before; the sync section just reports that sync isn't set up.
+
+In the app, one partner clicks **Opprett delingskode** and sends the `hj-…` code to the other, who pastes it under **Koble til**. From then on properties, requirements, and preferences sync automatically (on save, every 30 seconds, and when the tab regains focus). Deletions propagate too. Disconnecting keeps each person's local copy.
 
 ### Run locally
 
@@ -51,7 +64,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Privacy & data handling
 
-- Properties, preferences, and your API key are stored **only in your browser** (localStorage) — nothing is persisted server-side
+- Properties, preferences, and your API key are stored **only in your browser** (localStorage) by default — nothing is persisted server-side
+- If you enable **partner sync**, properties, requirements, and preferences (never API keys) are also stored in the app's Redis database under your secret share code; the code works like a password — anyone who has it can read and change that data
 - When you analyse a document, its text is sent through the app's serverless function to the Anthropic API using **your own key**; the function is a stateless proxy and stores nothing
 - The buy-score and AI assessment are guidance, not professional building, valuation, or financial advice — always read the full salgsoppgave and tilstandsrapport yourself
 - Use the in-app **Sikkerhetskopi** (backup) button to export your data to a file; clearing browser data will otherwise erase it

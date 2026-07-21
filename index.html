@@ -3,6 +3,15 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Husjakt — sammenlign boliger</title>
+<meta name="description" content="Sammenlign boliger side om side. Last opp salgsoppgave og tilstandsrapport, og få nøkkeltall, TG2/TG3-avvik med kostnadsestimater og en AI-vurdering — rangert etter dine krav.">
+<meta name="theme-color" content="#ece5d6">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Husjakt — sammenlign boliger">
+<meta property="og:description" content="Last opp salgsoppgave og tilstandsrapport, og sammenlign boliger side om side med nøkkeltall, TG-avvik og AI-vurdering.">
+<meta property="og:url" content="https://boligjakt.vercel.app/">
+<meta property="og:locale" content="nb_NO">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..600&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -277,6 +286,7 @@
 </style>
 </head>
 <body>
+<noscript><div style="max-width:640px;margin:60px auto;padding:0 20px;font-family:sans-serif;line-height:1.6">Husjakt trenger JavaScript for å lese PDF-er, analysere dokumenter og lagre boligene dine lokalt i nettleseren. Slå på JavaScript og last siden på nytt.</div></noscript>
 <div class="wrap">
   <header>
     <div class="kicker">Salgsoppgave + takst → vurdering</div>
@@ -401,6 +411,7 @@
 
   <footer>
     <div>Kjøpsscoren er en veiledende, regelbasert vurdering ut fra kravene og vektingen du oppgir — ikke en faktisk sannsynlighet eller en garanti. Tolkning, fordeler/ulemper og TG-avvik er hentet ut og oppsummert automatisk fra dokumentene du laster opp, og kan inneholde feil eller utelatelser — les alltid den fullstendige salgsoppgaven og tilstandsrapporten selv. Kostnadsestimatene bygger på takstrapportens egne anslag der de finnes, ellers grove overslag. Dette er verken bygg-, takst- eller finansiell rådgivning.</div>
+    <div style="margin-top:10px"><b>Personvern:</b> Boligene, kravene og API-nøkkelen din lagres kun lokalt i nettleseren — ingenting lagres på noen server. Når du analyserer et dokument, sendes teksten via appens server til Anthropic (Claude) med din egen API-nøkkel for å hente ut data og skrive vurderingen; se <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener" style="color:inherit">Anthropics personvernerklæring</a> for hvordan de behandler data. Ikke last opp dokumenter med sensitiv informasjon du ikke vil sende dit.</div>
     <button class="btn-ghost btn-sm clear" id="clearAll">Tøm alle boliger</button>
   </footer>
 </div>

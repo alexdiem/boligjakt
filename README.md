@@ -4,8 +4,6 @@
 
 Compare Norwegian properties side by side. Upload a salgsoppgave and tilstandsrapport (PDF), and the app extracts key facts, TG2/TG3 defects with cost estimates, and an AI-generated assessment — then ranks all your properties against each other.
 
-![Husjakt screenshot](https://github.com/alexdiem/boligjakt/raw/main/screenshot.png)
-
 ## Features
 
 - **PDF analysis** — upload salgsoppgave + tilstandsrapport, text is extracted in the browser
@@ -50,6 +48,13 @@ Open [http://localhost:3000](http://localhost:3000).
 3. Click **Analyser tekst** — fields are filled automatically
 4. Adjust any fields if needed, then click **Lagre bolig**
 5. Repeat for each property you want to compare
+
+## Privacy & data handling
+
+- Properties, preferences, and your API key are stored **only in your browser** (localStorage) — nothing is persisted server-side
+- When you analyse a document, its text is sent through the app's serverless function to the Anthropic API using **your own key**; the function is a stateless proxy and stores nothing
+- The buy-score and AI assessment are guidance, not professional building, valuation, or financial advice — always read the full salgsoppgave and tilstandsrapport yourself
+- Use the in-app **Sikkerhetskopi** (backup) button to export your data to a file; clearing browser data will otherwise erase it
 
 ## Tech stack
 

@@ -3,6 +3,15 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Husjakt — sammenlign boliger</title>
+<meta name="description" content="Sammenlign boliger side om side. Last opp salgsoppgave og tilstandsrapport, og få nøkkeltall, TG2/TG3-avvik med kostnadsestimater og en AI-vurdering — rangert etter dine krav.">
+<meta name="theme-color" content="#ece5d6">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Husjakt — sammenlign boliger">
+<meta property="og:description" content="Last opp salgsoppgave og tilstandsrapport, og sammenlign boliger side om side med nøkkeltall, TG-avvik og AI-vurdering.">
+<meta property="og:url" content="https://boligjakt.vercel.app/">
+<meta property="og:locale" content="nb_NO">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%A0%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com/">
 <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,400..600&amp;family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
@@ -277,6 +286,7 @@
 </style>
 </head>
 <body>
+<noscript><div style="max-width:640px;margin:60px auto;padding:0 20px;font-family:sans-serif;line-height:1.6">Husjakt trenger JavaScript for å lese PDF-er, analysere dokumenter og lagre boligene dine lokalt i nettleseren. Slå på JavaScript og last siden på nytt.</div></noscript>
 <div class="wrap">
   <header>
     <div class="kicker">Salgsoppgave + takst → vurdering</div>
@@ -401,6 +411,7 @@
 
   <footer>
     <div>Kjøpsscoren er en veiledende, regelbasert vurdering ut fra kravene og vektingen du oppgir — ikke en faktisk sannsynlighet eller en garanti. Tolkning, fordeler/ulemper og TG-avvik er hentet ut og oppsummert automatisk fra dokumentene du laster opp, og kan inneholde feil eller utelatelser — les alltid den fullstendige salgsoppgaven og tilstandsrapporten selv. Kostnadsestimatene bygger på takstrapportens egne anslag der de finnes, ellers grove overslag. Dette er verken bygg-, takst- eller finansiell rådgivning.</div>
+    <div style="margin-top:10px"><b>Personvern:</b> Boligene, kravene og API-nøkkelen din lagres kun lokalt i nettleseren — ingenting lagres på noen server. Når du analyserer et dokument, sendes teksten via appens server til Anthropic (Claude) med din egen API-nøkkel for å hente ut data og skrive vurderingen; se <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener" style="color:inherit">Anthropics personvernerklæring</a> for hvordan de behandler data. Ikke last opp dokumenter med sensitiv informasjon du ikke vil sende dit.</div>
     <button class="btn-ghost btn-sm clear" id="clearAll">Tøm alle boliger</button>
   </footer>
 </div>
@@ -441,8 +452,8 @@ const FIELDS = [
   {key:'oppussingsfond', label:'Oppussingsfond',      type:'num', suf:'kr'},
   {key:'vedlikeholdsplan', label:'Vedlikeholdsplan',  type:'text'},
   {key:'forretningsforer', label:'Forretningsfører',  type:'text'},
-  {key:'uteareal', label:'Uteareal (1–5, din vurdering)', type:'num'},
-  {key:'visningsnotat', label:'Notater fra visning',  type:'text', multiline:true},
+  {key:'uteareal', label:'Uteareal (1–5, din vurdering)', type:'num', preserveOnExtract:true},
+  {key:'visningsnotat', label:'Notater fra visning',  type:'text', multiline:true, preserveOnExtract:true},
 ];
 
 window.storage = {
@@ -638,7 +649,7 @@ function readForm(){
   FIELDS.forEach(f=>{
     let v=document.getElementById('f_'+f.key).value.trim();
     if(v==='') { o[f.key]=null; return; }
-    o[f.key] = f.type==='num' ? Number(v.replace(/\s/g,'').replace(',','.')) : v;
+    o[f.key] = f.type==='num' ? Number(v.replace(/\s/g,'').replace(/,/g,'.')) : v;
   });
   return o;
 }
@@ -675,11 +686,10 @@ async function extract(){
     const assessment = await r2.json();
 
     const parsed = { ...structured, ...assessment };
-    const belPrev = document.getElementById('f_uteareal').value;
-    const notePrev = document.getElementById('f_visningsnotat').value;
+    const preserved = {};
+    FIELDS.filter(f=>f.preserveOnExtract).forEach(f=>{ preserved[f.key]=document.getElementById('f_'+f.key).value; });
     fillForm(parsed);
-    if(belPrev) document.getElementById('f_uteareal').value = belPrev;
-    if(notePrev) document.getElementById('f_visningsnotat').value = notePrev;
+    FIELDS.filter(f=>f.preserveOnExtract).forEach(f=>{ document.getElementById('f_'+f.key).value=preserved[f.key]; });
     pendingAnalysis = {};
     ANALYSIS_KEYS.forEach(k=> pendingAnalysis[k] = (parsed[k]!=null?parsed[k]:null));
     pendingAnalysis['_excerpt'] = txt.slice(0,15000);
@@ -769,7 +779,8 @@ async function save(){
   }
   if(!o.adresse) o.adresse = 'Bolig '+(boliger.length+1);
   if(editingId){
-    const i=boliger.findIndex(x=>x.id===editingId); boliger[i]={...boliger[i],...o,...analysis};
+    const i=boliger.findIndex(x=>x.id===editingId); if(i===-1){ cancelEdit(); return; }
+    boliger[i]={...boliger[i],...o,...analysis};
   }else{
     o.id = newId(); boliger.push({...o,...analysis});
   }
@@ -783,24 +794,25 @@ async function del(id){
 }
 
 const reassessing = new Set();
+const reassessErrors = new Map();
 async function reassess(id){
   const b = boliger.find(x=>x.id===id); if(!b) return;
   const apiKey = getApiKey();
-  if(!apiKey){ alert('Lim inn Anthropic API-nøkkelen din for å re-vurdere.'); return; }
-  reassessing.add(id); renderDetails();
+  if(!apiKey){ reassessErrors.set(id,'Lim inn Anthropic API-nøkkelen din for å re-vurdere.'); renderDetails(); return; }
+  reassessing.add(id); reassessErrors.delete(id); renderDetails();
   const headers = {"Content-Type":"application/json","x-api-key":apiKey};
   try{
     const r = await fetch("/api/assess",{ method:"POST", headers,
       body:JSON.stringify({ structured:b, excerpt:b._excerpt||'', ignoreKids:prefs.ignoreKids, redFlags:prefs.redFlags }) });
-    if(r.status===401){ alert('Ugyldig API-nøkkel.'); return; }
-    if(r.status===429){ alert('For mange forespørsler akkurat nå — vent et minutt og prøv igjen.'); return; }
+    if(r.status===401){ reassessErrors.set(id,'Ugyldig API-nøkkel — sjekk at nøkkelen er riktig og prøv igjen.'); return; }
+    if(r.status===429){ reassessErrors.set(id,'For mange forespørsler akkurat nå — vent et minutt og prøv igjen.'); return; }
     if(!r.ok) throw new Error('assess: status '+r.status);
     const a = await r.json();
     const i = boliger.findIndex(x=>x.id===id);
-    boliger[i] = {...boliger[i], vurdering:a.vurdering, fordeler:a.fordeler, ulemper:a.ulemper};
+    if(i !== -1){ boliger[i] = {...boliger[i], vurdering:a.vurdering, fordeler:a.fordeler, ulemper:a.ulemper}; }
     await saveBoliger();
   }catch(e){
-    alert('Klarte ikke å re-vurdere: '+(e.message||e));
+    reassessErrors.set(id,'Klarte ikke å re-vurdere: '+(e.message||e));
   }finally{
     reassessing.delete(id); renderDetails();
   }
@@ -965,6 +977,7 @@ const ROWS = [
   {label:'Etasje',        get:b=>b.etasje,        fmt:v=>v},
   {label:'Energimerke',   get:b=>b.energimerke,   fmt:v=>v},
   {label:'Parkering',     get:b=>b.parkering,     fmt:v=>v},
+  {label:'Notater fra visning', get:b=>b.visningsnotat, fmt:v=>v.length>90 ? v.slice(0,90)+'…' : v},
   {section:'Sameie og økonomi'},
   {label:'Oppussingsfond',get:b=>b.oppussingsfond,fmt:fmtKr, higher:true, badge:true},
   {label:'Vedlikeholdsplan',get:b=>b.vedlikeholdsplan,fmt:v=>v},
@@ -1113,9 +1126,12 @@ function renderDetails(){
       html+='<div class="dcard-empty" style="padding:8px 0 0">Ingen tekstvurdering ennå — last opp salgsoppgave/takst for å få tolkning, fordeler/ulemper og TG-avvik. Sett gjerne også en uteareal-vurdering (1–5) på boligen.</div></div></div>';
       return;
     }
+    const reassessErr = reassessErrors.get(b.id);
     html += reassessing.has(b.id)
       ? `<div class="reassess-row"><span class="spinner" style="display:inline-block;vertical-align:middle;margin-right:6px"></span><span style="font-size:13px;color:var(--ink-faint)">Skriver ny vurdering …</span></div>`
-      : `<div class="reassess-row"><button class="btn-ghost btn-sm" data-reassess="${b.id}">Re-vurder med gjeldende preferanser</button></div>`;
+      : `<div class="reassess-row"><button class="btn-ghost btn-sm" data-reassess="${b.id}">Re-vurder med gjeldende preferanser</button>`
+        + (reassessErr ? `<span style="font-size:12px;color:var(--clay);margin-left:8px">${esc(reassessErr)}</span>` : '')
+        + `</div>`;
     if(b.vurdering) html+=`<div class="vurdering">${esc(b.vurdering)}</div>`;
     const pros=(b.fordeler||[]), cons=(b.ulemper||[]);
     if(pros.length||cons.length){

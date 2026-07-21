@@ -977,6 +977,7 @@ const ROWS = [
   {label:'Etasje',        get:b=>b.etasje,        fmt:v=>v},
   {label:'Energimerke',   get:b=>b.energimerke,   fmt:v=>v},
   {label:'Parkering',     get:b=>b.parkering,     fmt:v=>v},
+  {label:'Notater fra visning', get:b=>b.visningsnotat, fmt:v=>v.length>90 ? v.slice(0,90)+'…' : v},
   {section:'Sameie og økonomi'},
   {label:'Oppussingsfond',get:b=>b.oppussingsfond,fmt:fmtKr, higher:true, badge:true},
   {label:'Vedlikeholdsplan',get:b=>b.vedlikeholdsplan,fmt:v=>v},

@@ -430,7 +430,7 @@
 
   <footer>
     <div>Kjøpsscoren er en veiledende, regelbasert vurdering ut fra kravene og vektingen du oppgir — ikke en faktisk sannsynlighet eller en garanti. Tolkning, fordeler/ulemper og TG-avvik er hentet ut og oppsummert automatisk fra dokumentene du laster opp, og kan inneholde feil eller utelatelser — les alltid den fullstendige salgsoppgaven og tilstandsrapporten selv. Kostnadsestimatene bygger på takstrapportens egne anslag der de finnes, ellers grove overslag. Dette er verken bygg-, takst- eller finansiell rådgivning.</div>
-    <div style="margin-top:10px"><b>Personvern:</b> Boligene, kravene og API-nøkkelen din lagres kun lokalt i nettleseren — ingenting lagres på noen server. Når du analyserer et dokument, sendes teksten via appens server til Anthropic (Claude) med din egen API-nøkkel for å hente ut data og skrive vurderingen; se <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener" style="color:inherit">Anthropics personvernerklæring</a> for hvordan de behandler data. Ikke last opp dokumenter med sensitiv informasjon du ikke vil sende dit. Hvis du slår på skysynk, lagres boligene og kravene også i appens database under koden din — både som sikkerhetskopi for deg selv og for deling. Koden fungerer som passord: alle som har den kan se og endre dataene, så del den kun med partneren din.</div>
+    <div style="margin-top:10px"><b>Personvern:</b> Boligene, kravene og API-nøkkelen din lagres som utgangspunkt kun lokalt i nettleseren din. API-nøkkelen forlater aldri enheten annet enn for å gjøre dine egne analyser, og lagres aldri på noen server. Når du analyserer et dokument, sendes teksten via appens server til Anthropic (Claude) med din egen API-nøkkel for å hente ut data og skrive vurderingen; se <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener" style="color:inherit">Anthropics personvernerklæring</a> for hvordan de behandler data. Ikke last opp dokumenter med sensitiv informasjon du ikke vil sende dit. Hvis du slår på skysynk, lagres boligene og kravene også i appens database under koden din — både som sikkerhetskopi for deg selv og for deling. Koden fungerer som passord: alle som har den kan se og endre dataene, så del den kun med partneren din.</div>
     <button class="btn-ghost btn-sm clear" id="clearAll">Tøm alle boliger</button>
   </footer>
 </div>
@@ -608,11 +608,39 @@ function saveTombstones(){ try{ localStorage.setItem('husjakt:tombstones', JSON.
 function entomb(id){ tombstones[id]=Date.now(); saveTombstones(); }
 
 function makeSyncCode(){
-  const a=new Uint8Array(16); crypto.getRandomValues(a);
-  return 'hj-'+Array.from(a,x=>(x%36).toString(36)).join('');
+  // Rejection sampling keeps the char distribution uniform (252 = 36*7).
+  const chars='abcdefghijklmnopqrstuvwxyz0123456789';
+  let s='';
+  while(s.length<16){
+    const a=new Uint8Array(32); crypto.getRandomValues(a);
+    for(const x of a){ if(x<252 && s.length<16) s+=chars[x%36]; }
+  }
+  return 'hj-'+s;
 }
+const SYNC_CODE_RE=/^hj-[a-z0-9]{16,64}$/;
 function syncPayload(){ return { v:1, boliger, tombstones, krav, prefs }; }
-function syncCore(d){ return JSON.stringify({b:d.boliger||[], t:d.tombstones||{}, k:d.krav||{}, p:d.prefs||{}}); }
+// Canonical serialization for change detection: devices hold the same properties in
+// different array order (merged items are appended), so compare order-independently
+// or every sync round re-pushes equivalent state forever.
+function syncCore(d){
+  const b=(d.boliger||[]).slice().sort((x,y)=>String(x.id).localeCompare(String(y.id)));
+  const t=d.tombstones||{};
+  const tk={}; Object.keys(t).sort().forEach(k=>tk[k]=t[k]);
+  return JSON.stringify({b, t:tk, k:d.krav||{}, p:d.prefs||{}});
+}
+function pruneTombstones(){
+  const cutoff=Date.now()-90*24*60*60*1000;
+  Object.keys(tombstones).forEach(id=>{ if(tombstones[id]<cutoff) delete tombstones[id]; });
+}
+// LWW with a deterministic content tiebreak: when timestamps are equal (typically
+// both 0 for pre-sync data) but content differs, both devices adopt the same winner
+// instead of pushing their own version back and forth forever.
+function remoteWins(local, remote){
+  const lt=(local&&local._ts)||0, rt=(remote&&remote._ts)||0;
+  if(rt!==lt) return rt>lt;
+  const ls=JSON.stringify(local||{}), rs=JSON.stringify(remote||{});
+  return rs!==ls && rs<ls;
+}
 
 function mergeSync(remote){
   if(!remote) return;
@@ -628,25 +656,26 @@ function mergeSync(remote){
     else if((rb.updatedAt||0)>(lb.updatedAt||0)){ Object.keys(lb).forEach(k=>delete lb[k]); Object.assign(lb,rb); }
   });
   boliger = boliger.filter(b=> !(tombstones[b.id] && tombstones[b.id] > (b.updatedAt||0)));
-  if(remote.krav && (remote.krav._ts||0) > (krav._ts||0)){ krav={...krav, ...remote.krav}; ensureOrder(); }
-  if(remote.prefs && (remote.prefs._ts||0) > (prefs._ts||0)){ prefs={...prefs, ...remote.prefs}; }
+  if(remote.krav && remoteWins(krav, remote.krav)){ krav={...remote.krav}; ensureOrder(); }
+  if(remote.prefs && remoteWins(prefs, remote.prefs)){ prefs={...remote.prefs}; }
   return before !== syncCore(syncPayload());
 }
 
-let syncTimer=null, syncing=false, lastRemoteCore=null;
+let syncTimer=null, syncing=false, lastRemoteCore=null, lastRev=0;
 function setSyncStatus(cls,msg){
   const el=document.getElementById('syncStatus');
   el.className='sync-status'+(cls?' '+cls:''); el.textContent=msg||'';
 }
 function scheduleSync(){ if(!syncCode) return; clearTimeout(syncTimer); syncTimer=setTimeout(doSync, 1200); }
-async function doSync(){
+async function doSync(attempt=0){
   if(!syncCode || syncing) return;
   syncing=true;
   try{
-    const r=await fetch('/api/sync?code='+encodeURIComponent(syncCode));
+    const r=await fetch('/api/sync',{headers:{'x-sync-code':syncCode}});
     if(r.status===503){ setSyncStatus('err','Synk er ikke satt opp på serveren (mangler database) — se README.'); return; }
     if(!r.ok) throw new Error('status '+r.status);
     const j=await r.json();
+    lastRev=j.rev||0;
     let changed=false;
     if(j.data){ changed=mergeSync(j.data); lastRemoteCore=syncCore(j.data); }
     if(changed){
@@ -657,11 +686,19 @@ async function doSync(){
       if(editingId && !boliger.some(b=>b.id===editingId)) cancelEdit();
       render();
     }
+    pruneTombstones();
     const localCore=syncCore(syncPayload());
     if(localCore!==lastRemoteCore){
       const p=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({code:syncCode, data:syncPayload()})});
+        body:JSON.stringify({code:syncCode, data:syncPayload(), baseRev:lastRev})});
+      if(p.status===409){
+        // Someone else wrote between our read and write — re-pull and re-merge.
+        if(attempt<2){ syncing=false; return doSync(attempt+1); }
+        throw new Error('conflict');
+      }
       if(!p.ok) throw new Error('status '+p.status);
+      const pj=await p.json();
+      lastRev=pj.rev||lastRev+1;
       lastRemoteCore=localCore;
     }
     setSyncStatus('ok','Synket ✓ '+new Date().toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'}));
@@ -671,9 +708,15 @@ async function doSync(){
     syncing=false;
   }
 }
-async function connectSync(code){
+async function connectSync(code, isNew){
   code=code.trim().toLowerCase();
-  if(!/^hj-[a-z0-9]{12,64}$/.test(code)){ setSyncStatus('err','Ugyldig kode — den skal se ut som hj-a1b2c3…'); return; }
+  if(!SYNC_CODE_RE.test(code)){ setSyncStatus('err','Ugyldig kode — den skal se ut som hj-a1b2c3…'); return; }
+  if(!isNew && boliger.length){
+    const keep=confirm('Du har '+boliger.length+' bolig'+(boliger.length===1?'':'er')+' lagret på denne enheten fra før.\n\n'+
+      'OK: legg dem inn i det delte settet, slik at partneren din også ser dem.\n'+
+      'Avbryt: hent kun det som allerede er delt — boligene på denne enheten fjernes.');
+    if(!keep){ boliger=[]; expanded.clear(); await saveBoliger(); cancelEdit(); render(); }
+  }
   syncCode=code; localStorage.setItem('husjakt:syncCode', syncCode);
   renderSyncUI(); await doSync();
 }
@@ -701,9 +744,9 @@ function renderSyncUI(){
     act.innerHTML=`<button class="btn-ghost btn-sm" id="syncCreate">Slå på skysynk</button>`+
       `<div class="sync-join"><input id="syncJoinInput" placeholder="hj-… (kode fra partner eller annen enhet)" autocomplete="off">`+
       `<button class="btn-ghost btn-sm" id="syncJoin">Koble til</button></div>`;
-    document.getElementById('syncCreate').onclick=()=>connectSync(makeSyncCode());
-    document.getElementById('syncJoin').onclick=()=>connectSync(document.getElementById('syncJoinInput').value);
-    document.getElementById('syncJoinInput').onkeydown=e=>{ if(e.key==='Enter') connectSync(e.target.value); };
+    document.getElementById('syncCreate').onclick=()=>connectSync(makeSyncCode(), true);
+    document.getElementById('syncJoin').onclick=()=>connectSync(document.getElementById('syncJoinInput').value, false);
+    document.getElementById('syncJoinInput').onkeydown=e=>{ if(e.key==='Enter') connectSync(e.target.value, false); };
   }
 }
 
@@ -746,7 +789,7 @@ async function importData(file){
     if(d.krav) krav={...krav, ...d.krav, _ts:now};
     if(d.assume){ document.getElementById('rente').value=d.assume.rente ?? document.getElementById('rente').value;
       document.getElementById('lopetid').value=d.assume.lopetid ?? document.getElementById('lopetid').value; saveAssume(); }
-    if(!syncCode && d.syncCode && /^hj-[a-z0-9]{12,64}$/.test(d.syncCode)
+    if(!syncCode && d.syncCode && SYNC_CODE_RE.test(d.syncCode)
        && confirm('Filen inneholder en skysynk-kode. Koble til skykopien igjen?')){
       syncCode=d.syncCode; localStorage.setItem('husjakt:syncCode', syncCode); renderSyncUI();
     }
@@ -1037,11 +1080,10 @@ function scoreFor(b){
     if(eff > +krav.budsjett){ pct=Math.min(pct, krav.streng>0?42:(krav.streng===0?54:62)); notes.push({t:'Over budsjett-taket',k:'bad'}); }
     else if(eff <= +krav.budsjett*0.92) notes.push({t:'God margin til budsjett',k:'good'});
   }
+  // TG3 is penalized inside sCond (scaled by tg3tol); here we only flag it,
+  // so it isn't deducted twice.
   const t3=(b.tg3||[]).length;
-  if(t3>0){
-    const pen = krav.tg3tol==='avoid'?Math.min(32,t3*15) : krav.tg3tol==='comp'?Math.min(20,t3*9) : Math.min(10,t3*5);
-    pct-=pen; notes.push({t:t3+' TG3-avvik',k:'bad'});
-  }
+  if(t3>0) notes.push({t:t3+' TG3-avvik',k:'bad'});
   const t2=(b.tg2||[]).length;
   if(t2>=8) notes.push({t:t2+' TG2-avvik',k:'bad'});
   if(krav.minBra && b.bruksareal && b.bruksareal<+krav.minBra) notes.push({t:'Under ønsket størrelse',k:'bad'});
@@ -1210,10 +1252,10 @@ function scoreSummary(sc){
     s2=godMargin?'Boligen er godt innenfor budsjett, noe som gir ekstra rom.':worst.score<55?`${worst.label} (${worst.score}/100) er det svakeste leddet, men veier ikke tungt nok til å trekke ned totalen.`:'Ingen vesentlige negative trekk.';
   } else if(sc.pct>=60){
     s1=`${best.label} (${best.score}/100) trekker opp, men ${worst.label.toLowerCase()} (${worst.score}/100) holder scoren igjen.`;
-    s2=overBudget?'Boligen er over budsjett-taket, som setter et tak på totalen.':hasTg3?'TG3-avvik gir et ekstra trekk på toppen av vektingen.':'Et godt alternativ med noen svakheter å veie opp mot.';
+    s2=overBudget?'Boligen er over budsjett-taket, som setter et tak på totalen.':hasTg3?'TG3-avvikene trekker standard-delscoren betydelig ned.':'Et godt alternativ med noen svakheter å veie opp mot.';
   } else if(sc.pct>=40){
     s1=negNotes.length?`Scoren trekkes ned av ${negNotes.map(n=>n.t).join(' og ')}.`:`${worst.label} (${worst.score}/100) er det tyngste svake punktet sett mot vektingen din.`;
-    s2=overBudget?'Over-budsjett-straffen setter alene et hardt tak uansett andre styrker.':hasTg3?'TG3-avvik gir et ekstra trekk utover delscorene.':'Forbedring på '+worst.label.toLowerCase()+' vil ha størst effekt på scoren.';
+    s2=overBudget?'Over-budsjett-straffen setter alene et hardt tak uansett andre styrker.':hasTg3?'TG3-avvikene er en hovedårsak til den svake standard-delscoren.':'Forbedring på '+worst.label.toLowerCase()+' vil ha størst effekt på scoren.';
   } else {
     s1=negNotes.length?`Scoren er lav, primært på grunn av: ${negNotes.map(n=>n.t).join(' og ')}.`:`Lave delscorer på ${worst.label.toLowerCase()} (${worst.score}/100) og ${sorted[sorted.length-2].label.toLowerCase()} (${sorted[sorted.length-2].score}/100) trekker helheten ned.`;
     s2=overBudget&&hasTg3?'Kombinasjonen av over budsjett og TG3-avvik gir et hardt samlet trekk.':overBudget?'Budsjett-overskredet setter et strengt tak på totalscoren.':hasTg3?'TG3-avvik veier tungt og kompenseres ikke av styrker på andre kriterier.':'En samlet svak profil sett mot dine krav og prioriteringer.';

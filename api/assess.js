@@ -44,6 +44,6 @@ export default async function handler(req, res) {
     if (e.status === 401) return res.status(401).json({ error: "invalid_key" });
     if (e.status === 429) return res.status(429).json({ error: "rate_limit" });
     console.error("Assess error:", e.message);
-    res.status(500).json({ error: e.message || "Internal server error" });
+    res.status(500).json({ error: "server_error" });
   }
 }

@@ -263,7 +263,10 @@
           padding:18px 22px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
   .backup-txt b{font-family:'Fraunces',serif;font-weight:600;font-size:16px;display:block}
   .backup-txt span{font-size:13px;color:var(--ink-faint)}
-  #syncCard{margin-top:14px}
+  .backup-stack{display:block}
+  .backup-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+  .backup-sub{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+  .backup-sub .backup-txt span{font-size:12.5px}
   .sync-status{display:block;margin-top:4px;font-size:12px}
   .sync-status.ok{color:var(--pine)}
   .sync-status.err{color:var(--clay)}
@@ -409,19 +412,20 @@
   <div id="compareArea"></div>
   <div id="detailsArea"></div>
 
-  <div class="backup">
-    <div class="backup-txt"><b>Sikkerhetskopi</b><span>Lagre boligene og kravene dine til en fil du beholder selv — og hent dem inn igjen når som helst.</span></div>
-    <div class="backup-actions">
-      <button class="btn-ghost btn-sm" id="exportBtn">Last ned som fil</button>
-      <button class="btn-ghost btn-sm" id="importBtn">Hent inn fra fil</button>
-      <input type="file" id="importInput" accept="application/json,.json" style="display:none">
+  <div class="backup backup-stack" id="syncCard">
+    <div class="backup-row">
+      <div class="backup-txt"><b>Sikkerhetskopi og deling</b><span id="syncDesc">Lagre boligene og kravene trygt i skyen, hent dem på andre enheter, og del med den du er på boligjakt sammen med — alt synkes automatisk.</span>
+        <span class="sync-status" id="syncStatus"></span></div>
+      <div class="backup-actions" id="syncActions"></div>
     </div>
-  </div>
-
-  <div class="backup" id="syncCard">
-    <div class="backup-txt"><b>Skysynk — sikkerhetskopi og deling</b><span id="syncDesc">Lagre boligene og kravene trygt i skyen, hent dem på andre enheter, og del med den du er på boligjakt sammen med — alt synkes automatisk.</span>
-      <span class="sync-status" id="syncStatus"></span></div>
-    <div class="backup-actions" id="syncActions"></div>
+    <div class="backup-row backup-sub">
+      <div class="backup-txt"><span>Du kan også lagre alt til en fil du beholder selv — og hente den inn igjen når som helst. Skysynk-koden følger med i filen.</span></div>
+      <div class="backup-actions">
+        <button class="btn-ghost btn-sm" id="exportBtn">Last ned som fil</button>
+        <button class="btn-ghost btn-sm" id="importBtn">Hent inn fra fil</button>
+        <input type="file" id="importInput" accept="application/json,.json" style="display:none">
+      </div>
+    </div>
   </div>
 
   <footer>

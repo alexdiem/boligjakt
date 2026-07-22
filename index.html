@@ -263,7 +263,10 @@
           padding:18px 22px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
   .backup-txt b{font-family:'Fraunces',serif;font-weight:600;font-size:16px;display:block}
   .backup-txt span{font-size:13px;color:var(--ink-faint)}
-  #syncCard{margin-top:14px}
+  .backup-stack{display:block}
+  .backup-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+  .backup-sub{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line)}
+  .backup-sub .backup-txt span{font-size:12.5px}
   .sync-status{display:block;margin-top:4px;font-size:12px}
   .sync-status.ok{color:var(--pine)}
   .sync-status.err{color:var(--clay)}
@@ -409,24 +412,25 @@
   <div id="compareArea"></div>
   <div id="detailsArea"></div>
 
-  <div class="backup">
-    <div class="backup-txt"><b>Sikkerhetskopi</b><span>Lagre boligene og kravene dine til en fil du beholder selv — og hent dem inn igjen når som helst.</span></div>
-    <div class="backup-actions">
-      <button class="btn-ghost btn-sm" id="exportBtn">Last ned som fil</button>
-      <button class="btn-ghost btn-sm" id="importBtn">Hent inn fra fil</button>
-      <input type="file" id="importInput" accept="application/json,.json" style="display:none">
+  <div class="backup backup-stack" id="syncCard">
+    <div class="backup-row">
+      <div class="backup-txt"><b>Sikkerhetskopi og deling</b><span id="syncDesc">Lagre boligene og kravene trygt i skyen, hent dem på andre enheter, og del med den du er på boligjakt sammen med — alt synkes automatisk.</span>
+        <span class="sync-status" id="syncStatus"></span></div>
+      <div class="backup-actions" id="syncActions"></div>
     </div>
-  </div>
-
-  <div class="backup" id="syncCard">
-    <div class="backup-txt"><b>Synk med partner</b><span id="syncDesc">Del boligene og kravene med den du er på boligjakt sammen med — endringer synkes automatisk begge veier.</span>
-      <span class="sync-status" id="syncStatus"></span></div>
-    <div class="backup-actions" id="syncActions"></div>
+    <div class="backup-row backup-sub">
+      <div class="backup-txt"><span>Du kan også lagre alt til en fil du beholder selv — og hente den inn igjen når som helst. Skysynk-koden følger med i filen.</span></div>
+      <div class="backup-actions">
+        <button class="btn-ghost btn-sm" id="exportBtn">Last ned som fil</button>
+        <button class="btn-ghost btn-sm" id="importBtn">Hent inn fra fil</button>
+        <input type="file" id="importInput" accept="application/json,.json" style="display:none">
+      </div>
+    </div>
   </div>
 
   <footer>
     <div>Kjøpsscoren er en veiledende, regelbasert vurdering ut fra kravene og vektingen du oppgir — ikke en faktisk sannsynlighet eller en garanti. Tolkning, fordeler/ulemper og TG-avvik er hentet ut og oppsummert automatisk fra dokumentene du laster opp, og kan inneholde feil eller utelatelser — les alltid den fullstendige salgsoppgaven og tilstandsrapporten selv. Kostnadsestimatene bygger på takstrapportens egne anslag der de finnes, ellers grove overslag. Dette er verken bygg-, takst- eller finansiell rådgivning.</div>
-    <div style="margin-top:10px"><b>Personvern:</b> Boligene, kravene og API-nøkkelen din lagres kun lokalt i nettleseren — ingenting lagres på noen server. Når du analyserer et dokument, sendes teksten via appens server til Anthropic (Claude) med din egen API-nøkkel for å hente ut data og skrive vurderingen; se <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener" style="color:inherit">Anthropics personvernerklæring</a> for hvordan de behandler data. Ikke last opp dokumenter med sensitiv informasjon du ikke vil sende dit. Hvis du slår på partner-synk, lagres boligene og kravene også i appens database under delingskoden, slik at dere ser det samme — koden fungerer som passord, så del den kun med partneren din.</div>
+    <div style="margin-top:10px"><b>Personvern:</b> Boligene, kravene og API-nøkkelen din lagres kun lokalt i nettleseren — ingenting lagres på noen server. Når du analyserer et dokument, sendes teksten via appens server til Anthropic (Claude) med din egen API-nøkkel for å hente ut data og skrive vurderingen; se <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noopener" style="color:inherit">Anthropics personvernerklæring</a> for hvordan de behandler data. Ikke last opp dokumenter med sensitiv informasjon du ikke vil sende dit. Hvis du slår på skysynk, lagres boligene og kravene også i appens database under koden din — både som sikkerhetskopi for deg selv og for deling. Koden fungerer som passord: alle som har den kan se og endre dataene, så del den kun med partneren din.</div>
     <button class="btn-ghost btn-sm clear" id="clearAll">Tøm alle boliger</button>
   </footer>
 </div>
@@ -681,7 +685,7 @@ function renderSyncUI(){
   const act=document.getElementById('syncActions');
   const desc=document.getElementById('syncDesc');
   if(syncCode){
-    desc.textContent='Alle med denne koden ser og kan endre de samme boligene. Del den kun med partneren din.';
+    desc.textContent='Koden under er nøkkelen til skykopien din — skriv den ned et trygt sted (den ligger også i sikkerhetskopifilen). Bruk den til å hente boligene på en annen enhet, eller del den med partneren din så ser og endrer dere det samme.';
     act.innerHTML=`<span class="sync-code" id="syncCodeEl" title="Klikk for å kopiere">${esc(syncCode)}</span>`+
       `<button class="btn-ghost btn-sm" id="syncCopy">Kopier kode</button>`+
       `<button class="btn-ghost btn-sm" id="syncOff">Koble fra</button>`;
@@ -690,12 +694,12 @@ function renderSyncUI(){
     document.getElementById('syncCopy').onclick=copy;
     document.getElementById('syncCodeEl').onclick=copy;
     document.getElementById('syncOff').onclick=()=>{
-      if(confirm('Koble fra synk? Boligene beholdes lokalt hos begge, men holdes ikke lenger i takt.')) disconnectSync();
+      if(confirm('Koble fra skysynk? Alt beholdes lokalt her og i skyen, men holdes ikke lenger i takt. Ta vare på koden hvis du vil koble til igjen senere.')) disconnectSync();
     };
   }else{
-    desc.textContent='Del boligene og kravene med den du er på boligjakt sammen med — endringer synkes automatisk begge veier.';
-    act.innerHTML=`<button class="btn-ghost btn-sm" id="syncCreate">Opprett delingskode</button>`+
-      `<div class="sync-join"><input id="syncJoinInput" placeholder="hj-… (kode fra partner)" autocomplete="off">`+
+    desc.textContent='Lagre boligene og kravene trygt i skyen, hent dem på andre enheter, og del med den du er på boligjakt sammen med — alt synkes automatisk.';
+    act.innerHTML=`<button class="btn-ghost btn-sm" id="syncCreate">Slå på skysynk</button>`+
+      `<div class="sync-join"><input id="syncJoinInput" placeholder="hj-… (kode fra partner eller annen enhet)" autocomplete="off">`+
       `<button class="btn-ghost btn-sm" id="syncJoin">Koble til</button></div>`;
     document.getElementById('syncCreate').onclick=()=>connectSync(makeSyncCode());
     document.getElementById('syncJoin').onclick=()=>connectSync(document.getElementById('syncJoinInput').value);
@@ -707,6 +711,7 @@ function renderSyncUI(){
 function exportData(){
   const payload={ app:'husjakt', version:1, exportedAt:new Date().toISOString(),
     boliger, krav,
+    syncCode: syncCode || undefined,
     assume:{ rente:+document.getElementById('rente').value, lopetid:+document.getElementById('lopetid').value } };
   const json=JSON.stringify(payload,null,2);
   const stamp=new Date().toISOString().slice(0,10);
@@ -741,8 +746,13 @@ async function importData(file){
     if(d.krav) krav={...krav, ...d.krav, _ts:now};
     if(d.assume){ document.getElementById('rente').value=d.assume.rente ?? document.getElementById('rente').value;
       document.getElementById('lopetid').value=d.assume.lopetid ?? document.getElementById('lopetid').value; saveAssume(); }
+    if(!syncCode && d.syncCode && /^hj-[a-z0-9]{12,64}$/.test(d.syncCode)
+       && confirm('Filen inneholder en skysynk-kode. Koble til skykopien igjen?')){
+      syncCode=d.syncCode; localStorage.setItem('husjakt:syncCode', syncCode); renderSyncUI();
+    }
     await saveBoliger(); await saveKrav(); scheduleSync();
     applyKravToInputs(); cancelEdit(); render();
+    if(syncCode) doSync();
   }catch(e){
     errEl.textContent='Kunne ikke importere filen ('+(e.message||e)+'). Velg en husjakt-eksportfil (.json).';
   }

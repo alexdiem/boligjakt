@@ -10,7 +10,8 @@ Compare Norwegian properties side by side. Upload a salgsoppgave and tilstandsra
 - **AI extraction** — price, size, year built, energy rating, TG2/TG3 items with cost estimates
 - **Qualitative assessment** — summary, pros, cons written by Claude Sonnet
 - **Side-by-side comparison** — sortable table with best-value highlighting
-- **Scoring** — weighted ranking by size, outdoor area, condition, and price
+- **Scoring** — weighted ranking by size, outdoor area, condition, price, and your own viewing impression
+- **Structured viewing notes** — rate helhetsinntrykk, light/layout, technical impression, and noise (1–5) after each visning; the ratings feed into the score with a weight you control, and unvisited properties are flagged as provisional
 - **Persistent storage** — all properties saved in your browser's localStorage
 - **Cloud sync** — one secret code works both as an off-device backup (recover your data on any device) and for sharing with the person you're house-hunting with; changes sync automatically (optional, requires a free Upstash Redis database)
 - **BYO API key** — you supply your own Anthropic key; keys are never stored server-side

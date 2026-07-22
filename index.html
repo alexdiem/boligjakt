@@ -472,6 +472,10 @@ const FIELDS = [
   {key:'vedlikeholdsplan', label:'Vedlikeholdsplan',  type:'text'},
   {key:'forretningsforer', label:'Forretningsfører',  type:'text'},
   {key:'uteareal', label:'Uteareal (1–5, din vurdering)', type:'num', preserveOnExtract:true},
+  {key:'visning_helhet',   label:'Visning: helhetsinntrykk (1–5)',    type:'num', preserveOnExtract:true},
+  {key:'visning_lys',      label:'Visning: lys og planløsning (1–5)', type:'num', preserveOnExtract:true},
+  {key:'visning_tilstand', label:'Visning: teknisk inntrykk (1–5)',   type:'num', preserveOnExtract:true},
+  {key:'visning_stoy',     label:'Visning: støy og omgivelser (1–5)', type:'num', preserveOnExtract:true},
   {key:'visningsnotat', label:'Notater fra visning',  type:'text', multiline:true, preserveOnExtract:true},
 ];
 
@@ -491,23 +495,27 @@ let pendingAnalysis = null;
 // Defaults reflect the user's stated priorities: size > location > condition > price,
 // strict budget cap, zero tolerance for TG3. Weighting is derived from this ranking.
 let krav = { budsjett:null, streng:1, minBra:null, minSov:null, tg3tol:'avoid',
-             order:['size','uteareal','cond','price'] };
+             order:['size','uteareal','cond','price','visning'] };
 let prefs = { ignoreKids:false, redFlags:'' };
 const CRIT = [
   {key:'size', label:'Størrelse og planløsning'},
   {key:'uteareal', label:'Uteareal'},
   {key:'cond', label:'Standard og tilstand'},
   {key:'price',label:'Pris og økonomi'},
+  {key:'visning', label:'Inntrykk fra visning'},
 ];
 let dragIdx=null;
 function ensureOrder(){
   const keys=CRIT.map(c=>c.key);
-  if(Array.isArray(krav.order)) krav.order=krav.order.map(k=>k==='loc'?'uteareal':k);
-  if(!Array.isArray(krav.order) || keys.some(k=>!krav.order.includes(k)) || krav.order.length!==keys.length){
+  if(Array.isArray(krav.order)){
+    // Keep the user's ranking: rename legacy keys, drop unknown ones, append new criteria last.
+    krav.order=krav.order.map(k=>k==='loc'?'uteareal':k).filter(k=>keys.includes(k));
+  }else{
     const legacy={size:krav.wSize, loc:krav.wLoc, cond:krav.wCond, price:krav.wPrice};
-    if(keys.every(k=>typeof legacy[k]==='number')) krav.order=keys.slice().sort((a,b)=>legacy[b]-legacy[a]);
-    else krav.order=keys.slice();
+    krav.order = ['size','uteareal','cond','price'].every(k=>typeof legacy[k]==='number')
+      ? ['size','uteareal','cond','price'].sort((a,b)=>legacy[b]-legacy[a]) : [];
   }
+  keys.forEach(k=>{ if(!krav.order.includes(k)) krav.order.push(k); });
   delete krav.wSize; delete krav.wLoc; delete krav.wCond; delete krav.wPrice;
 }
 // Rank 1 gets the highest raw weight; normalised so the percentages always sum to 100.
@@ -1074,8 +1082,17 @@ function scoreFor(b){
     else { const k=krav.streng>0?520:(krav.streng===0?300:170); sPrice=clamp(55-(ratio-1)*k,0,55); }
   } else if(eff!=null){ sPrice=relativeValueScore(b); }
 
-  let pct = sSize*W.size + sUte*W.uteareal + sCond*W.cond + sPrice*W.price;
+  // Inntrykk fra visning (brukerens egne 1–5-vurderinger; nøytral 50 før visning)
+  const visVals=[b.visning_helhet,b.visning_lys,b.visning_tilstand,b.visning_stoy]
+    .map(Number).filter(v=>v>=1&&v<=5);
+  const visited=visVals.length>0;
+  let sVis = visited ? clamp((visVals.reduce((a,c)=>a+c,0)/visVals.length-1)/4*100,0,100) : 50;
+
+  let pct = sSize*W.size + sUte*W.uteareal + sCond*W.cond + sPrice*W.price + sVis*W.visning;
   const notes=[];
+  if(!visited) notes.push({t:'Ikke vurdert på visning ennå', k:'warn'});
+  else if(sVis<=25) notes.push({t:'Svakt visningsinntrykk', k:'bad'});
+  else if(sVis>=88) notes.push({t:'Sterkt visningsinntrykk', k:'good'});
   if(eff!=null && krav.budsjett){
     if(eff > +krav.budsjett){ pct=Math.min(pct, krav.streng>0?42:(krav.streng===0?54:62)); notes.push({t:'Over budsjett-taket',k:'bad'}); }
     else if(eff <= +krav.budsjett*0.92) notes.push({t:'God margin til budsjett',k:'good'});
@@ -1133,7 +1150,8 @@ function scoreFor(b){
     parts:[{label:'Størrelse',score:Math.round(sSize),w:Math.round(W.size*100)},
            {label:'Uteareal',score:Math.round(sUte),w:Math.round(W.uteareal*100)},
            {label:'Standard',score:Math.round(sCond),w:Math.round(W.cond*100)},
-           {label:'Pris',score:Math.round(sPrice),w:Math.round(W.price*100)}]};
+           {label:'Pris',score:Math.round(sPrice),w:Math.round(W.price*100)},
+           {label:'Visning',score:Math.round(sVis),w:Math.round(W.visning*100)}]};
 }
 
 // ---- Render comparison table ----
@@ -1157,6 +1175,12 @@ const ROWS = [
   {label:'Etasje',        get:b=>b.etasje,        fmt:v=>v},
   {label:'Energimerke',   get:b=>b.energimerke,   fmt:v=>v},
   {label:'Parkering',     get:b=>b.parkering,     fmt:v=>v},
+  {section:'Visning'},
+  {label:'Helhetsinntrykk (1–5)',    get:b=>b.visning_helhet,   fmt:n=>fmtNum(n), higher:true},
+  {label:'Lys og planløsning (1–5)', get:b=>b.visning_lys,      fmt:n=>fmtNum(n), higher:true},
+  {label:'Teknisk inntrykk (1–5)',   get:b=>b.visning_tilstand, fmt:n=>fmtNum(n), higher:true},
+  {label:'Støy og omgivelser (1–5)', get:b=>b.visning_stoy,     fmt:n=>fmtNum(n), higher:true},
+  {label:'Uteareal (1–5)',           get:b=>b.uteareal,         fmt:n=>fmtNum(n), higher:true},
   {label:'Notater fra visning', get:b=>b.visningsnotat, fmt:v=>v.length>90 ? v.slice(0,90)+'…' : v},
   {section:'Sameie og økonomi'},
   {label:'Oppussingsfond',get:b=>b.oppussingsfond,fmt:fmtKr, higher:true, badge:true},

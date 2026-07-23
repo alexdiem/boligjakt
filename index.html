@@ -309,11 +309,11 @@
       <h2>Lånekalkyle</h2>
       <div class="field">
         <label for="rente">Rente</label>
-        <div class="suffix"><input id="rente" type="number" step="0.05" value="5.5"><span>%</span></div>
+        <div class="suffix"><input id="rente" type="number" step="0.05" min="0" value="5.5"><span>%</span></div>
       </div>
       <div class="field">
         <label for="lopetid">Løpetid</label>
-        <div class="suffix"><input id="lopetid" type="number" step="1" value="25"><span>år</span></div>
+        <div class="suffix"><input id="lopetid" type="number" step="1" min="1" value="25"><span>år</span></div>
       </div>
       <p class="note">Antar full lånefinansiering av totalprisen — kun for å sammenligne boligene likt.</p>
     </div>
@@ -541,7 +541,12 @@ async function loadBoliger(){
   }catch(e){}
 }
 async function saveBoliger(){
-  try{ await window.storage.set('husjakt:boliger', JSON.stringify(boliger)); }catch(e){}
+  try{ await window.storage.set('husjakt:boliger', JSON.stringify(boliger)); }
+  catch(e){
+    // Quota exceeded or private-mode storage block — don't fail silently, this is data loss.
+    const el=document.getElementById('syncStatus');
+    if(el){ el.className='sync-status err'; el.textContent='Klarte ikke å lagre lokalt — nettleseren kan være full eller i privat modus. Last ned en sikkerhetskopi nå for å ikke miste data.'; }
+  }
 }
 async function saveKrav(){
   try{ await window.storage.set('husjakt:krav', JSON.stringify(krav)); }catch(e){}
@@ -626,7 +631,10 @@ function makeSyncCode(){
   return 'hj-'+s;
 }
 const SYNC_CODE_RE=/^hj-[a-z0-9]{16,64}$/;
-function syncPayload(){ return { v:1, boliger, tombstones, krav, prefs }; }
+// _excerpt (up to 15k chars/property, used only for local re-vurder) is stripped from
+// the synced blob — it dominated payload size and would otherwise hit the 900KB server
+// cap at ~55 properties. It stays in localStorage; a partner re-vurder just runs without it.
+function syncPayload(){ return { v:1, boliger: boliger.map(b=>{ const {_excerpt, ...rest}=b; return rest; }), tombstones, krav, prefs }; }
 // Canonical serialization for change detection: devices hold the same properties in
 // different array order (merged items are appended), so compare order-independently
 // or every sync round re-pushes equivalent state forever.
@@ -637,8 +645,9 @@ function syncCore(d){
   return JSON.stringify({b, t:tk, k:d.krav||{}, p:d.prefs||{}});
 }
 function pruneTombstones(){
-  const cutoff=Date.now()-90*24*60*60*1000;
-  Object.keys(tombstones).forEach(id=>{ if(tombstones[id]<cutoff) delete tombstones[id]; });
+  const cutoff=Date.now()-90*24*60*60*1000; let changed=false;
+  Object.keys(tombstones).forEach(id=>{ if(tombstones[id]<cutoff){ delete tombstones[id]; changed=true; } });
+  if(changed) saveTombstones();
 }
 // LWW with a deterministic content tiebreak: when timestamps are equal (typically
 // both 0 for pre-sync data) but content differs, both devices adopt the same winner
@@ -659,9 +668,16 @@ function mergeSync(remote){
   const map=new Map(boliger.map(b=>[b.id,b]));
   (remote.boliger||[]).forEach(rb=>{
     if(!rb || !rb.id) return;
+    // Don't yank the property the user is actively editing out from under them;
+    // their save (with a fresh updatedAt) will win and propagate afterwards.
+    if(editingId && rb.id===editingId) return;
     const lb=map.get(rb.id);
     if(!lb){ map.set(rb.id,rb); boliger.push(rb); }
-    else if((rb.updatedAt||0)>(lb.updatedAt||0)){ Object.keys(lb).forEach(k=>delete lb[k]); Object.assign(lb,rb); }
+    else if((rb.updatedAt||0)>(lb.updatedAt||0)){
+      const ex=lb._excerpt;                         // remote blob has no _excerpt; keep the local one
+      Object.keys(lb).forEach(k=>delete lb[k]); Object.assign(lb,rb);
+      if(ex!=null && lb._excerpt==null) lb._excerpt=ex;
+    }
   });
   boliger = boliger.filter(b=> !(tombstones[b.id] && tombstones[b.id] > (b.updatedAt||0)));
   if(remote.krav && remoteWins(krav, remote.krav)){ krav={...remote.krav}; ensureOrder(); }
@@ -704,6 +720,7 @@ async function doSync(attempt=0){
         if(attempt<2){ syncing=false; return doSync(attempt+1); }
         throw new Error('conflict');
       }
+      if(p.status===413){ setSyncStatus('err','For mange boliger til å synke automatisk — slett noen, eller bruk fil-sikkerhetskopi i stedet.'); return; }
       if(!p.ok) throw new Error('status '+p.status);
       const pj=await p.json();
       lastRev=pj.rev||lastRev+1;
@@ -782,6 +799,7 @@ function showJsonFallback(json){
   const m=document.getElementById('jsonModal');
   document.getElementById('jsonText').value=json;
   m.style.display='flex';
+  document.getElementById('closeJson').focus();
 }
 async function importData(file){
   const errEl=document.getElementById('extractErr');
@@ -1022,17 +1040,24 @@ function prisPerM2(b){
   return (t==null||!b.bruksareal)?null:t/b.bruksareal;
 }
 function maanedlig(b){
-  const t=totalpris(b); if(t==null) return null;
-  const r=(+document.getElementById('rente').value)/100/12;
-  const n=(+document.getElementById('lopetid').value)*12;
-  let laan = (r>0) ? t*r/(1-Math.pow(1+r,-n)) : t/n;
-  return laan + (b.felleskostnader||0);
+  const p=b.prisantydning; if(p==null) return null;
+  // Finance the cash outlay (prisantydning + omkostninger). Fellesgjeld is deliberately
+  // NOT financed here: for borettslag its renter/avdrag are already part of the monthly
+  // felleskostnader, so financing it AND adding felleskostnader would double-count.
+  // (Fellesgjeld still counts in totalpris as total acquisition cost.)
+  const laanebelop = p + (b.omkostninger||0);
+  const r=Math.max(0,(+document.getElementById('rente').value||0))/100/12;
+  const n=(+document.getElementById('lopetid').value||0)*12;
+  if(!(n>0)) return null;               // no løpetid -> can't amortise (avoids ∞)
+  const laan = (r>0) ? laanebelop*r/(1-Math.pow(1+r,-n)) : laanebelop/n;
+  return isFinite(laan) ? laan + (b.felleskostnader||0) : null;
 }
 const tg3Count = b => hasAnalysis(b) ? (b.tg3||[]).length : null;
 const tg2Count = b => hasAnalysis(b) ? (b.tg2||[]).length : null;
 function estLav(b){ return b.samlet_estimat && b.samlet_estimat.lav!=null ? b.samlet_estimat.lav : null; }
 function estHoy(b){ return b.samlet_estimat && b.samlet_estimat.hoy!=null ? b.samlet_estimat.hoy : null; }
-function estMid(b){ const l=estLav(b), h=estHoy(b); if(l==null&&h==null) return null; return ((l||h)+(h||l))/2; }
+function estMid(b){ const l=estLav(b), h=estHoy(b); if(l==null&&h==null) return null;
+  const a=l!=null?l:h, c=h!=null?h:l; return (a+c)/2; }
 function estRange(b){ const l=estLav(b), h=estHoy(b); if(l==null&&h==null) return null;
   return (l!=null?fmtKr(l):'?')+' – '+(h!=null?fmtKr(h):'?'); }
 function totalMedUtbedring(b){ const t=totalpris(b), m=estMid(b); return (t!=null&&m!=null)? t+m : null; }
@@ -1320,7 +1345,7 @@ function renderDetails(){
       html+='<div class="score-bars">';
       sc.parts.forEach(p=>{
         html+=`<div class="sbar"><span class="bl">${p.label} <span class="bw">${p.w}%</span></span>`+
-              `<span class="track"><span class="fill" style="width:${p.score}%"></span></span>`+
+              `<span class="track" role="progressbar" aria-valuenow="${p.score}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(p.label)} delscore ${p.score} av 100"><span class="fill" style="width:${p.score}%"></span></span>`+
               `<span class="sv">${p.score}</span></div>`;
       });
       html+='</div>';
@@ -1399,12 +1424,16 @@ document.getElementById('clearAll').onclick=async()=>{
 document.getElementById('exportBtn').onclick=exportData;
 document.getElementById('importBtn').onclick=()=>document.getElementById('importInput').click();
 document.getElementById('importInput').onchange=e=>{ if(e.target.files[0]) importData(e.target.files[0]); e.target.value=''; };
-document.getElementById('closeJson').onclick=()=>document.getElementById('jsonModal').style.display='none';
+function closeJsonModal(){ document.getElementById('jsonModal').style.display='none'; }
+document.getElementById('closeJson').onclick=closeJsonModal;
 document.getElementById('copyJson').onclick=()=>{
   const ta=document.getElementById('jsonText'); ta.select();
   try{ document.execCommand('copy'); document.getElementById('copyJson').textContent='Kopiert ✓'; }catch(e){}
 };
-document.getElementById('jsonModal').onclick=e=>{ if(e.target.id==='jsonModal') e.target.style.display='none'; };
+document.getElementById('jsonModal').onclick=e=>{ if(e.target.id==='jsonModal') closeJsonModal(); };
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.getElementById('jsonModal').style.display==='flex') closeJsonModal();
+});
 ['rente','lopetid'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{ saveAssume(); render(); }));
 
 function bindKrav(id,key,num){

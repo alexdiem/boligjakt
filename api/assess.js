@@ -1,6 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { parseJson } from "./_utils.js";
 
+export const config = { maxDuration: 60 };
+
 function sonnetPrompt(structured, textExcerpt, { ignoreKids, redFlags } = {}) {
   const extras = [
     ignoreKids && 'Ikke nevn barnvennlighet, lekeplasser, skoler, barnerom eller familieegnethet — verken i vurderingen, fordeler eller ulemper.',
@@ -33,11 +35,12 @@ export default async function handler(req, res) {
   const client = new Anthropic({ apiKey });
 
   try {
-    const msg = await client.messages.create({
+    const stream = client.messages.stream({
       model: "claude-sonnet-4-6",
       max_tokens: 1500,
       messages: [{ role: "user", content: sonnetPrompt(structured, excerpt || "", { ignoreKids, redFlags }) }],
     });
+    const msg = await stream.finalMessage();
     const assessment = parseJson((msg.content || []).map((c) => c.text || "").join("").trim());
     res.json(assessment);
   } catch (e) {

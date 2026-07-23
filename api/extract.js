@@ -63,8 +63,10 @@ export default async function handler(req, res) {
     if (msg.stop_reason === "max_tokens") {
       return res.status(502).json({ error: "too_many_findings" });
     }
+    const out = (msg.content || []).map((c) => c.text || "").join("").trim();
+    if (!out) return res.status(502).json({ error: "empty_response" });
 
-    const structured = parseJson((msg.content || []).map((c) => c.text || "").join("").trim());
+    const structured = parseJson(out);
     structured._truncated = truncated;
     res.json(structured);
   } catch (e) {

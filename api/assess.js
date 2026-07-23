@@ -41,7 +41,11 @@ export default async function handler(req, res) {
       messages: [{ role: "user", content: sonnetPrompt(structured, excerpt || "", { ignoreKids, redFlags }) }],
     });
     const msg = await stream.finalMessage();
-    const assessment = parseJson((msg.content || []).map((c) => c.text || "").join("").trim());
+    const out = (msg.content || []).map((c) => c.text || "").join("").trim();
+    if (msg.stop_reason === "max_tokens" || !out) {
+      return res.status(502).json({ error: "incomplete_output" });
+    }
+    const assessment = parseJson(out);
     res.json(assessment);
   } catch (e) {
     if (e.status === 401) return res.status(401).json({ error: "invalid_key" });

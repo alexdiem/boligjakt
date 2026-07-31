@@ -15,17 +15,25 @@ const CHAR_LIMIT = 350000;
 function haikuPrompt(text) {
   return `Du er en norsk boligekspert. Ekstraher strukturerte data fra dette boligdokumentet og svar KUN med ren JSON (ingen forklaring, ingen markdown).
 
-Regler for tall: rene tall uten mellomrom, "kr" eller "m²" (4 500 000 -> 4500000; 3,5 -> 3.5). felleskostnader er per måned. bruksareal er BRA-i/BRA/P-rom i m². Bruk null der verdien mangler.
+Regler for tall: rene tall uten mellomrom, "kr" eller "m²" (4 500 000 -> 4500000; 3,5 -> 3.5). felleskostnader er per måned. kommunale avgifter og eiendomsskatt er per år. bruksareal er BRA-i/BRA/P-rom i m². Bruk null der verdien mangler.
 
 For TG2/TG3: Ta med ALLE TG2- og TG3-funn fra tilstandsrapporten. For hvert funn: tema (kort), beskrivelse (kort, konkret — maks én setning), kostnad_lav/kostnad_hoy i kroner. Bruk takstrapportens egne kostnadsestimater; ellers gi et grovt anslag. samlet_estimat = totalt anslått utbedringskostnad som intervall {lav, hoy}.
 
 For sameie/borettslag: oppussingsfond = samlet vedlikeholdsfond/oppussingsfond/driftsfond i sameiets eller borettslagets regnskap (kr, null hvis beløpet ikke er oppgitt). vedlikeholdsplan = "Ja" hvis sameiet/borettslaget har en vedlikeholdsplan, "Nei" hvis det eksplisitt sies at det ikke finnes, null ellers. forretningsforer = navn på forretningsfører eller forvaltningsselskap (f.eks. OBOS Eiendomsforvaltning, USBL, Storbymegler), null hvis ikke nevnt.
 
+vedtattRehabilitering: kort beskrivelse av rehabilitering/oppgradering som er VEDTATT av sameiet/borettslaget men IKKE ferdigstilt ennå (f.eks. "Vedtatt fasaderehabilitering i 2026"), null hvis ikke nevnt eller kun under vurdering (ikke vedtatt). vedtattRehabKostnad = anslått kostnad PER SEKSJON/ANDEL i kroner hvis oppgitt (tallet alene, uten "kr"), null hvis ikke tallfestet.
+
+avdragsfriUtlop: når avdragsfrihet på fellesgjelden/IN-lånet utløper (f.eks. årstall eller "2028"), null hvis ikke avdragsfri eller ikke nevnt.
+
+kommunaleAvgifter: årlige kommunale avgifter (vann, avløp, renovasjon, feiing) i kroner, null hvis ikke oppgitt. Vanligst for eneboliger/rekkehus (selveier); for sameie/borettslag er dette ofte inkludert i felleskostnader og skal da stå som null her.
+
+eiendomsskatt: årlig eiendomsskatt i kroner, null hvis ikke oppgitt eller kommunen ikke har eiendomsskatt.
+
 parkering: kort beskrivelse av parkeringsmuligheter (f.eks. "Garasjeplass inkludert", "Leieplass i garasje tilgjengelig", "Beboerparkering i gate", "Ingen parkering"), null hvis ikke nevnt.
 
 Svar med nøyaktig denne JSON-strukturen:
-{"adresse":str,"boligtype":str,"eierform":str,"prisantydning":num,"omkostninger":num,"fellesgjeld":num,"felleskostnader":num,"bruksareal":num,"byggeaar":num,"soverom":num,"etasje":str,"energimerke":str,
-"parkering":str,"oppussingsfond":num,"vedlikeholdsplan":str,"forretningsforer":str,
+{"adresse":str,"boligtype":str,"eierform":str,"prisantydning":num,"omkostninger":num,"fellesgjeld":num,"felleskostnader":num,"kommunaleAvgifter":num,"eiendomsskatt":num,"bruksareal":num,"byggeaar":num,"soverom":num,"etasje":str,"energimerke":str,
+"parkering":str,"oppussingsfond":num,"vedlikeholdsplan":str,"forretningsforer":str,"vedtattRehabilitering":str,"vedtattRehabKostnad":num,"avdragsfriUtlop":str,
 "tg3":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
 "tg2":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
 "samlet_estimat":{"lav":num,"hoy":num},

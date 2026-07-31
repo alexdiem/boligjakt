@@ -7,7 +7,7 @@ Compare Norwegian properties side by side. Upload a salgsoppgave and tilstandsra
 ## Features
 
 - **PDF analysis** — upload salgsoppgave + tilstandsrapport, text is extracted in the browser
-- **AI extraction** — price, size, year built, energy rating, TG2/TG3 items with cost estimates
+- **AI extraction** — price, size, year built, energy rating, TG2/TG3 items with cost estimates, plus sameie/borettslag economics (oppussingsfond, vedtatt-but-not-completed rehabilitering, when avdragsfrihet on fellesgjeld expires) and selveier-specific costs (kommunale avgifter, eiendomsskatt)
 - **Qualitative assessment** — summary, pros, cons written by Claude Sonnet
 - **Side-by-side comparison** — sortable table with best-value highlighting
 - **Scoring** — weighted ranking by size, outdoor area, condition, price, and your own viewing impression

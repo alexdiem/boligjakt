@@ -462,6 +462,8 @@ const FIELDS = [
   {key:'omkostninger',label:'Omkostninger',           type:'num', suf:'kr'},
   {key:'fellesgjeld', label:'Fellesgjeld',            type:'num', suf:'kr'},
   {key:'felleskostnader',label:'Felleskostnader / mnd',type:'num', suf:'kr'},
+  {key:'kommunaleAvgifter', label:'Kommunale avgifter / år', type:'num', suf:'kr'},
+  {key:'eiendomsskatt', label:'Eiendomsskatt / år',     type:'num', suf:'kr'},
   {key:'bruksareal',  label:'Bruksareal (BRA-i/P-rom)',type:'num', suf:'m²'},
   {key:'byggeaar',    label:'Byggeår',                type:'num'},
   {key:'soverom',     label:'Soverom',                type:'num'},
@@ -471,6 +473,8 @@ const FIELDS = [
   {key:'oppussingsfond', label:'Oppussingsfond',      type:'num', suf:'kr'},
   {key:'vedlikeholdsplan', label:'Vedlikeholdsplan',  type:'text'},
   {key:'forretningsforer', label:'Forretningsfører',  type:'text'},
+  {key:'vedtattRehabilitering', label:'Vedtatt rehabilitering (ikke gjennomført)', type:'text', multiline:true},
+  {key:'avdragsfriUtlop', label:'Avdragsfrihet fellesgjeld utløper', type:'text'},
   {key:'uteareal', label:'Uteareal (1–5, din vurdering)', type:'num', preserveOnExtract:true},
   {key:'visning_helhet',   label:'Visning: helhetsinntrykk (1–5)',    type:'num', preserveOnExtract:true},
   {key:'visning_lys',      label:'Visning: lys og planløsning (1–5)', type:'num', preserveOnExtract:true},
@@ -1050,7 +1054,12 @@ function maanedlig(b){
   const n=(+document.getElementById('lopetid').value||0)*12;
   if(!(n>0)) return null;               // no løpetid -> can't amortise (avoids ∞)
   const laan = (r>0) ? laanebelop*r/(1-Math.pow(1+r,-n)) : laanebelop/n;
-  return isFinite(laan) ? laan + (b.felleskostnader||0) : null;
+  // Kommunale avgifter and eiendomsskatt are billed yearly outside felleskostnader —
+  // relevant mainly for selveier (eneboliger/rekkehus have no felleskostnader at all).
+  // Without these, a selveier house looks artificially cheaper per month than a sameie
+  // flat whose felleskostnader already bundles its equivalent costs.
+  const arligeAvgifter = (b.kommunaleAvgifter||0) + (b.eiendomsskatt||0);
+  return isFinite(laan) ? laan + (b.felleskostnader||0) + arligeAvgifter/12 : null;
 }
 const tg3Count = b => hasAnalysis(b) ? (b.tg3||[]).length : null;
 const tg2Count = b => hasAnalysis(b) ? (b.tg2||[]).length : null;
@@ -1154,6 +1163,13 @@ function scoreFor(b){
     }
     if(b.vedlikeholdsplan === 'Nei') notes.push({t:'Ingen vedlikeholdsplan', k:'warn'});
   }
+  if(b.vedtattRehabilitering && b.vedtattRehabilitering.trim()){
+    pct -= 5;
+    notes.push({t:'Vedtatt rehabilitering', k:'warn'});
+  }
+  if(b.avdragsfriUtlop && b.avdragsfriUtlop.trim()){
+    notes.push({t:'Avdragsfrihet utløper: '+b.avdragsfriUtlop.trim(), k:'warn'});
+  }
 
   // Red flag penalty: search all available text fields for each flag term
   if(prefs.redFlags && prefs.redFlags.trim()){
@@ -1216,6 +1232,8 @@ const ROWS = [
   {label:'Oppussingsfond',get:b=>b.oppussingsfond,fmt:fmtKr, higher:true, badge:true},
   {label:'Vedlikeholdsplan',get:b=>b.vedlikeholdsplan,fmt:v=>v},
   {label:'Forretningsfører',get:b=>b.forretningsforer,fmt:v=>v},
+  {label:'Vedtatt rehabilitering',get:b=>b.vedtattRehabilitering,fmt:v=>v.length>90?v.slice(0,90)+'…':v},
+  {label:'Avdragsfrihet utløper',get:b=>b.avdragsfriUtlop,fmt:v=>v},
   {section:'Tilstand & kostnad'},
   {label:'TG3-avvik (alvorlige)', get:tg3Count, fmt:n=>n+(n===1?' avvik':' avvik'), lower:true, badge:true},
   {label:'TG2-avvik',     get:tg2Count, fmt:n=>n+' avvik', lower:true},
@@ -1223,6 +1241,8 @@ const ROWS = [
   {label:'Totalpris + utbedring', get:totalMedUtbedring, fmt:fmtKr, lower:true, big:true, badge:true},
   {section:'Bokostnader'},
   {label:'Felleskostnader / mnd', get:b=>b.felleskostnader, fmt:fmtKr, lower:true},
+  {label:'Kommunale avgifter / år', get:b=>b.kommunaleAvgifter, fmt:fmtKr, lower:true},
+  {label:'Eiendomsskatt / år', get:b=>b.eiendomsskatt, fmt:fmtKr, lower:true},
   {label:'Est. bokostnad / mnd',  get:maanedlig, fmt:fmtKr, lower:true, big:true, badge:true},
 ];
 

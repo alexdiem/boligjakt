@@ -21,7 +21,7 @@ For TG2/TG3: Ta med ALLE TG2- og TG3-funn fra tilstandsrapporten. For hvert funn
 
 For sameie/borettslag: oppussingsfond = samlet vedlikeholdsfond/oppussingsfond/driftsfond i sameiets eller borettslagets regnskap (kr, null hvis beløpet ikke er oppgitt). vedlikeholdsplan = "Ja" hvis sameiet/borettslaget har en vedlikeholdsplan, "Nei" hvis det eksplisitt sies at det ikke finnes, null ellers. forretningsforer = navn på forretningsfører eller forvaltningsselskap (f.eks. OBOS Eiendomsforvaltning, USBL, Storbymegler), null hvis ikke nevnt.
 
-vedtattRehabilitering: kort beskrivelse av rehabilitering/oppgradering som er VEDTATT av sameiet/borettslaget men IKKE ferdigstilt ennå (f.eks. "Vedtatt fasaderehabilitering, anslått 250 000 kr per seksjon i 2026"), inkluder anslått kostnad per seksjon/andel hvis oppgitt. null hvis ikke nevnt eller kun under vurdering (ikke vedtatt).
+vedtattRehabilitering: kort beskrivelse av rehabilitering/oppgradering som er VEDTATT av sameiet/borettslaget men IKKE ferdigstilt ennå (f.eks. "Vedtatt fasaderehabilitering i 2026"), null hvis ikke nevnt eller kun under vurdering (ikke vedtatt). vedtattRehabKostnad = anslått kostnad PER SEKSJON/ANDEL i kroner hvis oppgitt (tallet alene, uten "kr"), null hvis ikke tallfestet.
 
 avdragsfriUtlop: når avdragsfrihet på fellesgjelden/IN-lånet utløper (f.eks. årstall eller "2028"), null hvis ikke avdragsfri eller ikke nevnt.
 
@@ -33,7 +33,7 @@ parkering: kort beskrivelse av parkeringsmuligheter (f.eks. "Garasjeplass inklud
 
 Svar med nøyaktig denne JSON-strukturen:
 {"adresse":str,"boligtype":str,"eierform":str,"prisantydning":num,"omkostninger":num,"fellesgjeld":num,"felleskostnader":num,"kommunaleAvgifter":num,"eiendomsskatt":num,"bruksareal":num,"byggeaar":num,"soverom":num,"etasje":str,"energimerke":str,
-"parkering":str,"oppussingsfond":num,"vedlikeholdsplan":str,"forretningsforer":str,"vedtattRehabilitering":str,"avdragsfriUtlop":str,
+"parkering":str,"oppussingsfond":num,"vedlikeholdsplan":str,"forretningsforer":str,"vedtattRehabilitering":str,"vedtattRehabKostnad":num,"avdragsfriUtlop":str,
 "tg3":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
 "tg2":[{"tema":str,"beskrivelse":str,"kostnad_lav":num,"kostnad_hoy":num}],
 "samlet_estimat":{"lav":num,"hoy":num},

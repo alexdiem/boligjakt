@@ -474,6 +474,7 @@ const FIELDS = [
   {key:'vedlikeholdsplan', label:'Vedlikeholdsplan',  type:'text'},
   {key:'forretningsforer', label:'Forretningsfører',  type:'text'},
   {key:'vedtattRehabilitering', label:'Vedtatt rehabilitering (ikke gjennomført)', type:'text', multiline:true},
+  {key:'vedtattRehabKostnad', label:'Vedtatt rehabilitering: kostnad per seksjon/andel', type:'num', suf:'kr'},
   {key:'avdragsfriUtlop', label:'Avdragsfrihet fellesgjeld utløper', type:'text'},
   {key:'uteareal', label:'Uteareal (1–5, din vurdering)', type:'num', preserveOnExtract:true},
   {key:'visning_helhet',   label:'Visning: helhetsinntrykk (1–5)',    type:'num', preserveOnExtract:true},
@@ -1037,7 +1038,11 @@ async function reassess(id){
 // ---- Computed metrics ----
 function totalpris(b){
   const p=b.prisantydning, o=b.omkostninger||0, f=b.fellesgjeld||0;
-  return p==null?null:p+o+f;
+  // vedtattRehabKostnad (kr per seksjon/andel) is a known, approved-but-unpaid future
+  // cost of ownership — same character as fellesgjeld, so it belongs in the acquisition
+  // total rather than only sitting in a warn chip that ignores its size.
+  const vr=b.vedtattRehabKostnad||0;
+  return p==null?null:p+o+f+vr;
 }
 function prisPerM2(b){
   const t=totalpris(b);
@@ -1162,13 +1167,28 @@ function scoreFor(b){
       notes.push({t:'Fond ikke oppgitt', k:'warn'});
     }
     if(b.vedlikeholdsplan === 'Nei') notes.push({t:'Ingen vedlikeholdsplan', k:'warn'});
-  }
-  if(b.vedtattRehabilitering && b.vedtattRehabilitering.trim()){
-    pct -= 5;
-    notes.push({t:'Vedtatt rehabilitering', k:'warn'});
-  }
-  if(b.avdragsfriUtlop && b.avdragsfriUtlop.trim()){
-    notes.push({t:'Avdragsfrihet utløper: '+b.avdragsfriUtlop.trim(), k:'warn'});
+    if(b.kommunaleAvgifter != null){
+      // For sameie/borettslag, kommunale avgifter are usually already inside
+      // felleskostnader; the extraction prompt asks the model to leave this null in
+      // that case, but that's a soft instruction, not a guarantee — flag it so the
+      // user can confirm rather than silently double-counting or silently dropping it.
+      notes.push({t:'Sjekk: kommunale avgifter kan alt inngå i felleskostnader', k:'warn'});
+    }
+    if(b.vedtattRehabilitering && b.vedtattRehabilitering.trim()){
+      // The quantified cost (vedtattRehabKostnad) already lowers sPrice via totalpris —
+      // don't also apply a flat penalty here, or a 250k rehab and an unquantified one
+      // would be double-penalized/under-penalized relative to each other.
+      if(b.vedtattRehabKostnad == null){
+        pct -= 5;                    // approved cost is real but not yet reflected in price
+        notes.push({t:'Vedtatt rehabilitering (kostnad ikke oppgitt)', k:'warn'});
+      } else {
+        notes.push({t:'Vedtatt rehabilitering: '+fmtKr(b.vedtattRehabKostnad), k:'warn'});
+      }
+    }
+    if(b.avdragsfriUtlop && b.avdragsfriUtlop.trim()){
+      const v=b.avdragsfriUtlop.trim();
+      notes.push({t:'Avdragsfrihet utløper: '+(v.length>20?v.slice(0,20)+'…':v), k:'warn'});
+    }
   }
 
   // Red flag penalty: search all available text fields for each flag term
@@ -1233,6 +1253,7 @@ const ROWS = [
   {label:'Vedlikeholdsplan',get:b=>b.vedlikeholdsplan,fmt:v=>v},
   {label:'Forretningsfører',get:b=>b.forretningsforer,fmt:v=>v},
   {label:'Vedtatt rehabilitering',get:b=>b.vedtattRehabilitering,fmt:v=>v.length>90?v.slice(0,90)+'…':v},
+  {label:'  → kostnad per seksjon/andel',get:b=>b.vedtattRehabKostnad,fmt:fmtKr, lower:true},
   {label:'Avdragsfrihet utløper',get:b=>b.avdragsfriUtlop,fmt:v=>v},
   {section:'Tilstand & kostnad'},
   {label:'TG3-avvik (alvorlige)', get:tg3Count, fmt:n=>n+(n===1?' avvik':' avvik'), lower:true, badge:true},

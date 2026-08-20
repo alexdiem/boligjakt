@@ -1114,9 +1114,10 @@ function scoreFor(b){
     const per3 = krav.tg3tol==='avoid'?26 : krav.tg3tol==='comp'?18 : 12;
     const pen3 = t3*per3;                      // alvorlige avvik: lineært og tungt
     const pen2 = 32*(t2/(t2+5));               // TG2: avtagende, metter mot ~32 (aldri alene til 0)
-    const m=estMid(b);                          // utbedringskostnad som andel av pris
-    const penCost = (tp&&m)? clamp((m/tp)*130, 0, 22) : 0;
-    sCond = clamp(Math.round(100 - pen3 - pen2 - penCost), 0, 100);
+    // Utbedringskostnad påvirker ikke sCond direkte — den er allerede med i eff/sPrice
+    // (mot budsjett), og skal ikke straffes to ganger. Se renoBonus lenger ned: et
+    // totaloppussingsobjekt som er innenfor budsjett er ikke en ulempe i seg selv.
+    sCond = clamp(Math.round(100 - pen3 - pen2), 0, 100);
   }
   // Pris & økonomi
   let sPrice=50;
@@ -1145,6 +1146,13 @@ function scoreFor(b){
   // so it isn't deducted twice.
   const t3=(b.tg3||[]).length;
   if(t3>0) notes.push({t:t3+' TG3-avvik',k:'bad'});
+  // Totaloppussingsobjekt som er komfortabelt innenfor budsjett er en mulighet,
+  // ikke bare en kostnad — man får i praksis et nytt hus etter egne ønsker.
+  // Krever satt budsjett (ellers vet vi ikke om det er "komfortabelt").
+  if(t3>0 && eff!=null && krav.budsjett && eff<=+krav.budsjett){
+    pct += clamp(t3*2, 0, 8);
+    notes.push({t:'Oppussingsobjekt innenfor budsjett',k:'good'});
+  }
   const t2=(b.tg2||[]).length;
   if(t2>=8) notes.push({t:t2+' TG2-avvik',k:'bad'});
   if(krav.minBra && b.bruksareal && b.bruksareal<+krav.minBra) notes.push({t:'Under ønsket størrelse',k:'bad'});
@@ -1340,11 +1348,12 @@ function scoreSummary(sc){
   const overBudget=sc.notes.some(n=>n.t.includes('budsjett-taket'));
   const hasTg3=sc.notes.some(n=>n.t.includes('TG3'));
   const godMargin=sc.notes.some(n=>n.t.includes('God margin'));
+  const renoBonus=sc.notes.some(n=>n.t.includes('Oppussingsobjekt innenfor budsjett'));
   const negNotes=sc.notes.filter(n=>n.k==='bad');
   let s1,s2;
   if(sc.pct>=75){
     s1=`Scoren er høy, drevet av sterk ${best.label.toLowerCase()} (${best.score}/100) vektet mot dine prioriteringer.`;
-    s2=godMargin?'Boligen er godt innenfor budsjett, noe som gir ekstra rom.':worst.score<55?`${worst.label} (${worst.score}/100) er det svakeste leddet, men veier ikke tungt nok til å trekke ned totalen.`:'Ingen vesentlige negative trekk.';
+    s2=renoBonus?'Et totaloppussingsobjekt som er innenfor budsjett — full frihet til å velge standard selv.':godMargin?'Boligen er godt innenfor budsjett, noe som gir ekstra rom.':worst.score<55?`${worst.label} (${worst.score}/100) er det svakeste leddet, men veier ikke tungt nok til å trekke ned totalen.`:'Ingen vesentlige negative trekk.';
   } else if(sc.pct>=60){
     s1=`${best.label} (${best.score}/100) trekker opp, men ${worst.label.toLowerCase()} (${worst.score}/100) holder scoren igjen.`;
     s2=overBudget?'Boligen er over budsjett-taket, som setter et tak på totalen.':hasTg3?'TG3-avvikene trekker standard-delscoren betydelig ned.':'Et godt alternativ med noen svakheter å veie opp mot.';
